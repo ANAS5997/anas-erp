@@ -1,5 +1,4 @@
-// public/sw.js
-const CACHE_NAME = "smart-erp-cache-v1";
+const CACHE_NAME = "smart-erp-cache-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/manifest.json",
