@@ -11,9 +11,33 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
+// Check if Firebase config is populated and valid
+const hasValidConfig = 
+  firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== "" && 
+  !firebaseConfig.apiKey.includes("your_firebase_api_key");
 
+let app;
+let auth: any;
+let googleProvider: any;
+
+if (hasValidConfig) {
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: "select_account" });
+  } catch (error) {
+    console.warn("Failed to initialize Firebase Auth:", error);
+    // Fallback Mock
+    auth = {} as any;
+    googleProvider = {} as any;
+  }
+} else {
+  // Mock fallback for build/development when credentials aren't set
+  auth = {} as any;
+  googleProvider = {} as any;
+}
+
+export { auth, googleProvider };
 export default app;
