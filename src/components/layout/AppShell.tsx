@@ -194,15 +194,15 @@ export function AppShell({ children }: AppShellProps) {
             </h1>
           </div>
 
-          <div className="flex items-center space-x-2 md:space-x-4 space-x-reverse">
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 space-x-reverse">
             {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
-              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors flex items-center space-x-1"
+              className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors flex items-center space-x-1"
               title={language === "en" ? "العربية" : "English"}
             >
               <Globe className="h-5 w-5" />
-              <span className="text-xs font-semibold">{language === "en" ? "AR" : "EN"}</span>
+              <span className="text-xs font-semibold hidden sm:inline-block">{language === "en" ? "AR" : "EN"}</span>
             </button>
 
             {/* Premium Theme Color Picker Pill */}
@@ -217,7 +217,7 @@ export function AppShell({ children }: AppShellProps) {
                 <button
                   key={c.name}
                   onClick={() => setThemeColor(c.name as any)}
-                  className={`h-3.5 w-3.5 rounded-full ${c.color} cursor-pointer transition-all duration-200 hover:scale-125 active:scale-95 ${
+                  className={`h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full ${c.color} cursor-pointer transition-all duration-200 hover:scale-125 active:scale-95 ${
                     themeColor === c.name 
                       ? "ring-1.5 ring-primary ring-offset-2 ring-offset-background scale-110" 
                       : "opacity-75 hover:opacity-100"
