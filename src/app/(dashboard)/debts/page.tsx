@@ -234,7 +234,7 @@ export default function DebtsPage() {
 
         {/* Debt list table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left border-collapse">
+          <table className="w-full text-sm text-left border-collapse hidden md:table">
             <thead>
               <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider font-semibold bg-muted/20">
                 <th className="px-6 py-4">{t("cust_name")}</th>
@@ -323,6 +323,85 @@ export default function DebtsPage() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile Debt Cards */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {filteredDebts.length === 0 ? (
+              <p className="text-center text-muted-foreground italic py-8">
+                {t("no_data")}
+              </p>
+            ) : (
+              filteredDebts.map((item) => (
+                <div key={item.id} className="bg-card border border-border p-4 rounded-3xl space-y-4 shadow-sm relative">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-extrabold text-base text-foreground">{item.customerName}</h4>
+                      {item.customerPhone && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Phone className="h-3 w-3" />
+                          {item.customerPhone}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        item.isOverdue
+                          ? "bg-red-500/10 text-red-500 border-red-500/20"
+                          : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                      }`}
+                    >
+                      {item.isOverdue ? t("debt_overdue") : t("debt_pending")}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/50 text-xs">
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block font-bold">{t("sale_invoice_num")}</span>
+                      <Link href={`/invoices/${item.id}`} className="text-primary hover:underline font-extrabold">
+                        #{item.id}
+                      </Link>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block font-bold">{t("debt_due_date")}</span>
+                      <span className={`font-semibold ${item.isOverdue ? "text-red-500 font-extrabold" : "text-muted-foreground"}`}>
+                        {item.dueDate ? formatDate(item.dueDate) : "No Limit"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block font-bold">Invoice Total</span>
+                      <span className="font-semibold text-muted-foreground">{formatCurrency(item.total)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block font-bold">{t("debt_amount")}</span>
+                      <span className="font-extrabold text-rose-500 text-sm">{formatCurrency(item.remaining)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-3 border-t border-border/30">
+                    <div>
+                      {item.customerPhone && (
+                        <a
+                          href={getWhatsAppReminderUrl(item)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 font-bold rounded-xl text-xs transition-all"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          <span>{t("debt_remind_whatsapp")}</span>
+                        </a>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleOpenPaymentModal(item.id)}
+                      className="px-3.5 py-1.5 bg-primary text-primary-foreground font-bold rounded-xl text-xs shadow-sm hover:scale-[1.01] transition-all cursor-pointer"
+                    >
+                      {t("btn_record_payment")}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 

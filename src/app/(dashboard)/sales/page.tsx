@@ -112,7 +112,7 @@ export default function SalesPage() {
 
         {/* Invoice Grid/Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-foreground border-collapse">
+          <table className="w-full text-sm text-left text-foreground border-collapse hidden md:table">
             <thead>
               <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider font-semibold bg-muted/20">
                 <th className="px-6 py-4">{t("sale_invoice_num")}</th>
@@ -192,6 +192,73 @@ export default function SalesPage() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile Invoice Cards */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {filteredOrders.length === 0 ? (
+              <p className="text-center text-muted-foreground italic py-8">
+                {t("no_data")}
+              </p>
+            ) : (
+              filteredOrders.map((ord) => (
+                <div key={ord.id} className="bg-card border border-border p-4 rounded-3xl space-y-4 shadow-sm relative">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="font-mono text-xs font-bold text-foreground">#{ord.id}</span>
+                      <p className="font-bold text-sm text-foreground mt-1">{ord.customerName}</p>
+                      {ord.customerPhone && (
+                        <p className="text-xs text-muted-foreground">{ord.customerPhone}</p>
+                      )}
+                    </div>
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        ord.status === "paid"
+                          ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                          : ord.status === "partial"
+                          ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                          : "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                      }`}
+                    >
+                      {ord.status === "paid"
+                        ? t("sale_status_paid")
+                        : ord.status === "partial"
+                        ? t("sale_status_partial")
+                        : t("sale_status_unpaid")}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/50 text-xs">
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block font-bold">{t("sale_date")}</span>
+                      <span className="text-muted-foreground font-semibold">{formatDate(ord.createdAt)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block font-bold">Total</span>
+                      <span className="font-extrabold text-foreground">{formatCurrency(ord.total)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block font-bold">Paid</span>
+                      <span className="font-extrabold text-emerald-500">{formatCurrency(ord.paid)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block font-bold">Remaining</span>
+                      <span className="font-extrabold text-rose-500">{ord.remaining > 0 ? formatCurrency(ord.remaining) : "—"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-3 border-t border-border/30">
+                    <Link
+                      href={`/invoices/${ord.id}`}
+                      className="px-3.5 py-1.5 bg-primary/10 border border-primary/20 text-primary font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer hover:bg-primary/15 transition-all"
+                    >
+                      <Receipt className="h-4 w-4" />
+                      <span>{t("view_invoice")}</span>
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

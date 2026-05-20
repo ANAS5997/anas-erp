@@ -326,8 +326,8 @@ export default function InvoicePage() {
             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               Order Items Summary
             </h4>
-            <div className="border border-border rounded-2xl overflow-hidden print:border-slate-300">
-              <table className="w-full text-sm text-left border-collapse">
+            <div className="border border-border rounded-2xl overflow-x-auto print:border-slate-300">
+              <table className="w-full text-sm text-left border-collapse min-w-[500px] md:min-w-0">
                 <thead>
                   <tr className="bg-muted/50 border-b border-border font-bold text-muted-foreground text-xs uppercase print:bg-slate-100 print:border-slate-300">
                     <th className="px-6 py-3.5">Product Name</th>

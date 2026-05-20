@@ -238,7 +238,7 @@ export default function ExpensesPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left rtl:text-right">
+            <table className="w-full text-sm text-left rtl:text-right hidden md:table">
               <thead>
                 <tr className="border-b border-border text-muted-foreground text-xs font-semibold">
                   <th className="py-3 px-4">{t("expense_date")}</th>
@@ -298,6 +298,55 @@ export default function ExpensesPage() {
                 )}
               </tbody>
             </table>
+
+            {/* Mobile Expenses Cards */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+              {filteredExpenses.length === 0 ? (
+                <p className="text-center text-muted-foreground italic py-8">
+                  {t("no_data")}
+                </p>
+              ) : (
+                filteredExpenses.map((exp) => (
+                  <div key={exp.id} className="bg-card border border-border p-4 rounded-3xl space-y-4 shadow-sm relative">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-extrabold text-sm text-foreground">{exp.title}</h4>
+                        {exp.notes && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{exp.notes}</p>
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        {formatDate(exp.date)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-3 border-t border-border/50 text-xs">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className={`h-2 w-2 rounded-full ${CATEGORY_COLORS[exp.category] || "bg-slate-500"}`}></span>
+                        <span className="text-muted-foreground font-semibold">
+                          {t(`expense_categories.${exp.category}` as any)}
+                        </span>
+                      </span>
+                      <span className="font-extrabold text-rose-500 text-sm">
+                        {formatCurrency(exp.amount)}
+                      </span>
+                    </div>
+
+                    {role === "admin" && (
+                      <div className="flex justify-end pt-3 border-t border-border/30">
+                        <button
+                          onClick={() => deleteExpense(exp.id)}
+                          className="px-3.5 py-1.5 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/15 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>{t("btn_delete")}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 

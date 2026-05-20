@@ -200,7 +200,7 @@ export default function ProductsPage() {
 
         {/* Catalog Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-foreground border-collapse">
+          <table className="w-full text-sm text-left text-foreground border-collapse hidden md:table">
             <thead>
               <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider font-semibold bg-muted/20">
                 <th className="px-6 py-4">{t("prod_name")}</th>
@@ -332,6 +332,116 @@ export default function ProductsPage() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile Catalog Cards */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {filteredProducts.length === 0 ? (
+              <p className="text-center text-muted-foreground italic py-8">
+                {t("no_data")}
+              </p>
+            ) : (
+              filteredProducts.map((prod) => {
+                const isLowStock = prod.stockQty <= prod.lowStockThreshold;
+                const cost = prod.costPrice || 0;
+                const profit = prod.price - cost;
+                const markupPercent = cost > 0 ? (profit / cost) * 100 : 0;
+                const potentialProfit = profit * prod.stockQty;
+
+                return (
+                  <div key={prod.id} className="bg-card border border-border p-4 rounded-3xl space-y-4 shadow-sm relative">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-extrabold text-base text-foreground">{prod.name}</h4>
+                        {prod.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{prod.description}</p>
+                        )}
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <span className="text-[10px] font-bold bg-muted border border-border px-2 py-0.5 rounded-lg text-muted-foreground">
+                            {t(`prod_categories.${prod.category}` as any)}
+                          </span>
+                          {prod.sku && (
+                            <span className="text-[10px] font-mono bg-muted border border-border px-2 py-0.5 rounded-lg text-muted-foreground">
+                              {prod.sku}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="text-end">
+                        <span
+                          className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold border ${
+                            prod.stockQty === 0
+                              ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                              : isLowStock
+                              ? "bg-amber-500/10 text-amber-500 border-amber-500/20 animate-pulse"
+                              : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                          }`}
+                        >
+                          {prod.stockQty} {isRTL ? "متبقي" : "left"}
+                        </span>
+                        {isLowStock && (
+                          <p className="text-[9px] text-rose-500 font-bold mt-1">
+                            ⚠️ {isRTL ? "منخفض!" : "Low!"}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/50 text-xs">
+                      {role === "admin" ? (
+                        <>
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("cost_price")}</span>
+                            <span className="font-extrabold text-sm text-rose-500">{formatCurrency(cost)}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("prod_price")}</span>
+                            <span className="font-extrabold text-sm text-emerald-500">{formatCurrency(prod.price)}</span>
+                          </div>
+                          <div className="col-span-2 bg-muted/30 p-2.5 border border-border/40 rounded-2xl flex justify-between items-center">
+                            <div>
+                              <span className="text-[10px] text-muted-foreground block font-bold">{isRTL ? "هامش الربح" : "Margin"}</span>
+                              <span className="font-extrabold text-emerald-500">+{formatCurrency(profit)} ({markupPercent.toFixed(0)}%)</span>
+                            </div>
+                            {prod.stockQty > 0 && (
+                              <div className="text-end">
+                                <span className="text-[10px] text-muted-foreground block font-bold">{isRTL ? "أرباح متوقعة" : "Potential"}</span>
+                                <span className="font-extrabold text-primary">{formatCurrency(potentialProfit)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="col-span-2">
+                          <span className="text-[10px] text-muted-foreground block font-bold uppercase">{t("prod_price")}</span>
+                          <span className="font-extrabold text-sm text-emerald-500">{formatCurrency(prod.price)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-3 border-t border-border/30">
+                      <button
+                        onClick={() => handleOpenEditModal(prod)}
+                        className="px-3.5 py-1.5 border border-border hover:bg-muted text-foreground font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{t("btn_edit")}</span>
+                      </button>
+                      {role === "admin" && (
+                        <button
+                          onClick={() => handleDelete(prod.id)}
+                          className="px-3.5 py-1.5 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/15 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>{t("btn_delete")}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 
