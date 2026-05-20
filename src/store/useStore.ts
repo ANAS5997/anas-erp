@@ -11,6 +11,7 @@ import type {
   ProductCategory,
   OrderStatus,
   Expense,
+  EmployeeAccount,
 } from "@/types";
 import { calcRemaining, getDebtStatus } from "@/lib/utils";
 
@@ -39,6 +40,8 @@ interface AppState {
   notifications: Notification[];
   activityLogs: ActivityLog[];
   expenses: Expense[];
+  adminPassword?: string;
+  employeeAccounts?: EmployeeAccount[];
   
   // Settings / Store details
   storeName: string;
@@ -63,6 +66,10 @@ interface AppState {
     receiptFormat: "thermal" | "a4";
     currency: string;
   }) => void;
+  changeAdminPassword: (newPassword: string) => void;
+  addEmployeeAccount: (employee: Omit<EmployeeAccount, "id" | "createdAt">) => void;
+  updateEmployeeAccount: (id: string, employee: Partial<EmployeeAccount>) => void;
+  deleteEmployeeAccount: (id: string) => void;
   
   // Customer Actions
   addCustomer: (customer: Omit<Customer, "id" | "createdAt">) => void;
@@ -341,6 +348,8 @@ export const useStore = create<AppState>()(
       role: "admin",
       theme: "dark",
       language: "en",
+      adminPassword: "Admin@123456",
+      employeeAccounts: [],
       
       storeName: "Smart Electric & Home",
       storePhone: "+201012345678",
@@ -387,6 +396,37 @@ export const useStore = create<AppState>()(
       updateInvoiceSettings: (settings) => {
         set(settings);
         get().logActivity(`Invoice branding and customization settings updated.`);
+      },
+      changeAdminPassword: (newPassword) => {
+        set({ adminPassword: newPassword });
+        get().logActivity("Admin password updated successfully.");
+      },
+      addEmployeeAccount: (emp) => {
+        const newEmp = {
+          ...emp,
+          id: `emp_${Date.now()}`,
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          employeeAccounts: [...(state.employeeAccounts || []), newEmp],
+        }));
+        get().logActivity(`Created new employee account: ${emp.name} (${emp.email})`);
+      },
+      updateEmployeeAccount: (id, updatedData) => {
+        set((state) => ({
+          employeeAccounts: (state.employeeAccounts || []).map((emp) =>
+            emp.id === id ? { ...emp, ...updatedData } : emp
+          ),
+        }));
+        const name = (get().employeeAccounts || []).find((e) => e.id === id)?.name || id;
+        get().logActivity(`Updated details for employee: ${name}`);
+      },
+      deleteEmployeeAccount: (id) => {
+        const name = (get().employeeAccounts || []).find((e) => e.id === id)?.name || id;
+        set((state) => ({
+          employeeAccounts: (state.employeeAccounts || []).filter((emp) => emp.id !== id),
+        }));
+        get().logActivity(`Deleted employee account: ${name}`);
       },
 
       // Customers
@@ -726,6 +766,8 @@ export const useStore = create<AppState>()(
         activityLogs: state.activityLogs,
         user: state.user,
         role: state.role,
+        adminPassword: state.adminPassword,
+        employeeAccounts: state.employeeAccounts,
       }),
     }
   )

@@ -115,3 +115,12 @@ export interface Expense {
   createdAt: string;
 }
 
+export interface EmployeeAccount {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  isActive: boolean;
+  createdAt: string;
+}
+

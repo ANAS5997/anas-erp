@@ -16,6 +16,10 @@ import {
   Download,
   Upload,
   Sparkles,
+  Key,
+  Trash2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -40,6 +44,12 @@ export default function SettingsPage() {
     taxRate,
     receiptFormat,
     currency,
+    adminPassword,
+    employeeAccounts,
+    changeAdminPassword,
+    addEmployeeAccount,
+    updateEmployeeAccount,
+    deleteEmployeeAccount,
   } = useStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,6 +69,73 @@ export default function SettingsPage() {
   const [invoiceSaveSuccess, setInvoiceSaveSuccess] = useState(false);
 
   const [restoreStatus, setRestoreStatus] = useState<"idle" | "success" | "error">("idle");
+
+  // Admin password states
+  const [newAdminPassword, setNewAdminPassword] = useState("");
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState("");
+  const [adminPasswordError, setAdminPasswordError] = useState<string | null>(null);
+  const [adminPasswordSuccess, setAdminPasswordSuccess] = useState(false);
+
+  // Employee creation states
+  const [empName, setEmpName] = useState("");
+  const [empEmail, setEmpEmail] = useState("");
+  const [empPassword, setEmpPassword] = useState("");
+  const [showEmpPasswordMap, setShowEmpPasswordMap] = useState<Record<string, boolean>>({});
+
+  const handleUpdateAdminPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminPasswordError(null);
+    setAdminPasswordSuccess(false);
+
+    if (newAdminPassword.length < 6) {
+      setAdminPasswordError(language === "ar" ? "يجب أن تكون كلمة المرور 6 أحرف على الأقل." : "Password must be at least 6 characters.");
+      return;
+    }
+    if (newAdminPassword !== confirmAdminPassword) {
+      setAdminPasswordError(language === "ar" ? "كلمتا المرور غير متطابقتين!" : "Passwords do not match!");
+      return;
+    }
+
+    changeAdminPassword(newAdminPassword);
+    setAdminPasswordSuccess(true);
+    setNewAdminPassword("");
+    setConfirmAdminPassword("");
+    setTimeout(() => setAdminPasswordSuccess(false), 3000);
+  };
+
+  const handleAddEmployee = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!empName.trim() || !empEmail.trim() || !empPassword.trim()) return;
+
+    // Check if email already exists
+    const emailLower = empEmail.trim().toLowerCase();
+    const emailExists = (employeeAccounts || []).some(
+      (emp) => emp.email.toLowerCase() === emailLower
+    );
+    if (emailExists || emailLower === "anas@store.com") {
+      alert(language === "ar" ? "هذا البريد الإلكتروني مستخدم بالفعل!" : "Email address is already in use!");
+      return;
+    }
+
+    addEmployeeAccount({
+      name: empName.trim(),
+      email: empEmail.trim(),
+      password: empPassword.trim(),
+      isActive: true,
+    });
+
+    setEmpName("");
+    setEmpEmail("");
+    setEmpPassword("");
+    alert(language === "ar" ? "تم إضافة الموظف بنجاح!" : "Employee added successfully!");
+  };
+
+  const toggleEmpPasswordVisibility = (id: string) => {
+    setShowEmpPasswordMap((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const handleSaveStore = (e: React.FormEvent) => {
     e.preventDefault();
@@ -370,6 +447,208 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Admin Password & Employee Accounts Manager */}
+          {role === "admin" && (
+            <div className="space-y-8 animate-fade-in">
+              {/* Change Admin Password */}
+              <div className="p-6 bg-card border border-border rounded-3xl shadow-sm space-y-4">
+                <h3 className="font-bold text-lg border-b border-border pb-3 flex items-center gap-2">
+                  <Key className="h-5 w-5 text-primary" />
+                  <span>{language === "ar" ? "تغيير كلمة مرور المدير (التحكم الأمني)" : "Change Admin Password"}</span>
+                </h3>
+                <form onSubmit={handleUpdateAdminPassword} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground block">
+                        {language === "ar" ? "كلمة المرور الجديدة" : "New Admin Password"} *
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={newAdminPassword}
+                        onChange={(e) => setNewAdminPassword(e.target.value)}
+                        placeholder="••••••"
+                        className="w-full bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground block">
+                        {language === "ar" ? "تأكيد كلمة المرور الجديدة" : "Confirm New Password"} *
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={confirmAdminPassword}
+                        onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                        placeholder="••••••"
+                        className="w-full bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                  {adminPasswordError && (
+                    <p className="text-xs text-rose-500 font-bold">{adminPasswordError}</p>
+                  )}
+                  <div className="flex justify-between items-center pt-2">
+                    {adminPasswordSuccess ? (
+                      <span className="text-xs text-emerald-500 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-lg">
+                        ✓ {language === "ar" ? "تم تحديث كلمة المرور بنجاح" : "Admin Password Updated"}
+                      </span>
+                    ) : (
+                      <span></span>
+                    )}
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-primary text-primary-foreground text-xs font-bold rounded-xl shadow-md hover:scale-[1.01] transition-all cursor-pointer"
+                    >
+                      {language === "ar" ? "حفظ كلمة المرور الجديدة" : "Update Password"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Employee Accounts Management */}
+              <div className="p-6 bg-card border border-border rounded-3xl shadow-sm space-y-6">
+                <div className="border-b border-border pb-3 flex items-center justify-between">
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <span>{language === "ar" ? "إدارة حسابات الموظفين" : "Employee Accounts Management"}</span>
+                  </h3>
+                  <span className="text-xs font-bold px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full">
+                    {(employeeAccounts || []).length} {language === "ar" ? "موظفين" : "Employees"}
+                  </span>
+                </div>
+
+                {/* Add New Employee Form */}
+                <form onSubmit={handleAddEmployee} className="p-4 bg-muted/20 border border-border rounded-2xl space-y-4">
+                  <span className="text-xs font-extrabold text-foreground uppercase tracking-wider block">
+                    {language === "ar" ? "إضافة موظف جديد" : "Add New Employee Account"}
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                        {language === "ar" ? "اسم الموظف" : "Name"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={language === "ar" ? "اسم الموظف" : "Employee Name"}
+                        value={empName}
+                        onChange={(e) => setEmpName(e.target.value)}
+                        className="w-full bg-card border border-border rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                        {language === "ar" ? "البريد الإلكتروني / اسم الدخول" : "Email"}
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        placeholder={language === "ar" ? "anas@store.com" : "email@store.com"}
+                        value={empEmail}
+                        onChange={(e) => setEmpEmail(e.target.value)}
+                        className="w-full bg-card border border-border rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                        {language === "ar" ? "كلمة مرور الموظف" : "Password"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={language === "ar" ? "كلمة المرور" : "Password"}
+                        value={empPassword}
+                        onChange={(e) => setEmpPassword(e.target.value)}
+                        className="w-full bg-card border border-border rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-xl shadow hover:scale-[1.01] transition-all cursor-pointer"
+                    >
+                      {language === "ar" ? "+ إضافة الحساب" : "+ Add Account"}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Employees Accounts List */}
+                <div className="space-y-3">
+                  <span className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider block">
+                    {language === "ar" ? "الحسابات الحالية" : "Active Operator Accounts"}
+                  </span>
+                  {(employeeAccounts || []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic text-center py-4 border border-dashed border-border rounded-2xl bg-muted/10">
+                      {language === "ar" ? "لا يوجد حسابات موظفين مضافة حالياً." : "No employee accounts added yet."}
+                    </p>
+                  ) : (
+                    <div className="divide-y divide-border border border-border rounded-2xl overflow-hidden bg-card">
+                      {(employeeAccounts || []).map((emp) => {
+                        const isVisible = !!showEmpPasswordMap[emp.id];
+                        return (
+                          <div key={emp.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/10 transition-colors">
+                            <div className="space-y-1 text-start">
+                              <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                                <span>{emp.name}</span>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold ${
+                                  emp.isActive ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                                }`}>
+                                  {emp.isActive ? (language === "ar" ? "نشط" : "Active") : (language === "ar" ? "معطل" : "Disabled")}
+                                </span>
+                              </p>
+                              <p className="text-xs text-muted-foreground">{emp.email}</p>
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 bg-muted/40 px-2 py-1 rounded w-fit">
+                                <span>{language === "ar" ? "كلمة المرور:" : "Password:"}</span>
+                                <span className="font-mono font-bold text-foreground">
+                                  {isVisible ? emp.password : "••••••"}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleEmpPasswordVisibility(emp.id)}
+                                  className="text-muted-foreground hover:text-foreground p-0.5"
+                                >
+                                  {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                              <button
+                                type="button"
+                                onClick={() => updateEmployeeAccount(emp.id, { isActive: !emp.isActive })}
+                                className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+                                  emp.isActive
+                                    ? "bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20 text-rose-500"
+                                    : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-500"
+                                }`}
+                              >
+                                {emp.isActive ? (language === "ar" ? "تعطيل" : "Disable") : (language === "ar" ? "تفعيل" : "Enable")}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm(language === "ar" ? "هل أنت متأكد من حذف حساب هذا الموظف؟" : "Are you sure you want to delete this account?")) {
+                                    deleteEmployeeAccount(emp.id);
+                                  }
+                                }}
+                                className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 rounded-lg transition-all"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Backup & Restore system */}
           <div className="p-6 bg-card border border-border rounded-3xl shadow-sm space-y-6">

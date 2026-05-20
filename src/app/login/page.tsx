@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Shield, Sparkles, AlertCircle } from "lucide-react";
+import { Shield, Sparkles, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { auth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup } from "firebase/auth";
 
@@ -15,6 +15,72 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSimulatedPopup, setShowSimulatedPopup] = useState(false);
+
+  const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleCredentialLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    setTimeout(() => {
+      const state = useStore.getState();
+      const storedAdminPassword = state.adminPassword || "Admin@123456";
+      const storedEmployees = state.employeeAccounts || [];
+      const language = state.language;
+      
+      const emailLower = emailInput.trim().toLowerCase();
+      
+      // 1. Check Admin Credentials
+      if ((emailLower === "admin" || emailLower === "anas@store.com") && passwordInput === storedAdminPassword) {
+        setRole("admin");
+        setUser({
+          id: "admin_account",
+          name: "Anas Al-Otaibi (Admin)",
+          email: "anas@store.com",
+          role: "admin",
+          createdAt: new Date().toISOString(),
+        });
+        setLoading(false);
+        router.push("/dashboard");
+        return;
+      }
+
+      // 2. Check Employee Credentials
+      const matchingEmployee = storedEmployees.find(
+        (emp) => emp.email.trim().toLowerCase() === emailLower && emp.password === passwordInput
+      );
+
+      if (matchingEmployee) {
+        if (!matchingEmployee.isActive) {
+          setError(language === "ar" ? "هذا الحساب معطل حالياً من قبل الإدارة." : "This account is currently disabled by Admin.");
+          setLoading(false);
+          return;
+        }
+        setRole("employee");
+        setUser({
+          id: matchingEmployee.id,
+          name: matchingEmployee.name,
+          email: matchingEmployee.email,
+          role: "employee",
+          createdAt: matchingEmployee.createdAt,
+        });
+        setLoading(false);
+        router.push("/dashboard");
+        return;
+      }
+
+      // 3. Error Fallback
+      setError(
+        language === "ar"
+          ? "اسم المستخدم أو كلمة المرور غير صحيحة!"
+          : "Invalid email/username or password!"
+      );
+      setLoading(false);
+    }, 600);
+  };
 
   const handleRealGoogleLogin = async () => {
     setLoading(true);
@@ -147,6 +213,63 @@ export default function LoginPage() {
                 <span className="text-xs font-bold">Employee</span>
               </button>
             </div>
+          </div>
+
+          {/* Credentials Login Form */}
+          <form onSubmit={handleCredentialLogin} className="space-y-4">
+            <div className="space-y-1.5 text-start">
+              <label className="text-xs font-semibold text-slate-400 block">
+                {isRTL ? "البريد الإلكتروني أو اسم المستخدم" : "Email Address or Username"}
+              </label>
+              <input
+                type="text"
+                required
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder={role === "admin" ? "anas@store.com / admin" : "employee@store.com"}
+                className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:border-primary text-white"
+              />
+            </div>
+
+            <div className="space-y-1.5 text-start">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-semibold text-slate-400">
+                  {isRTL ? "كلمة المرور" : "Password"}
+                </label>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-primary text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 left-3 flex items-center text-slate-500 hover:text-slate-300"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 px-4 bg-primary hover:bg-primary/95 text-white font-semibold rounded-2xl hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+            >
+              {loading ? (isRTL ? "جاري تسجيل الدخول..." : "Signing In...") : (isRTL ? "تسجيل الدخول بالبيانات" : "Sign In with Credentials")}
+            </button>
+          </form>
+
+          {/* Separator */}
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-slate-800"></div>
+            <span className="flex-shrink mx-4 text-slate-500 text-[10px] uppercase tracking-wider">{isRTL ? "أو" : "or"}</span>
+            <div className="flex-grow border-t border-slate-800"></div>
           </div>
 
           <div className="space-y-4">
