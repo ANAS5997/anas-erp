@@ -124,7 +124,7 @@ export default function LogsPage() {
       </div>
 
       {/* Logs Table Card */}
-      <div className="p-3 sm:p-6 bg-card border border-border rounded-3xl shadow-sm">
+      <div className="p-3 sm:p-6 bg-card border border-border rounded-3xl shadow-sm w-full max-w-[100vw] sm:max-w-full overflow-hidden">
         <div className="overflow-x-auto">
           {/* Desktop Table View */}
           <table className="w-full text-sm text-left text-foreground border-collapse hidden md:table">

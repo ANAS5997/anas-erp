@@ -353,7 +353,7 @@ export function AppShell({ children }: AppShellProps) {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-3 sm:p-4 md:p-8 pb-24 md:pb-8 max-w-7xl w-full mx-auto animate-fade-in">
+        <main className="flex-1 p-3 sm:p-4 md:p-8 pb-24 md:pb-8 max-w-[100vw] sm:max-w-7xl w-full mx-auto animate-fade-in overflow-x-hidden">
           {children}
         </main>
         <SystemGuide />

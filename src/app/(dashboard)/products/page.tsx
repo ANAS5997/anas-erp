@@ -160,7 +160,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Category Pills Ribbon */}
-      <div className="flex items-center space-x-2 space-x-reverse overflow-x-auto pb-2 scrollbar-none">
+      <div className="flex items-center space-x-2 space-x-reverse overflow-x-auto pb-2 scrollbar-none w-full max-w-[100vw] sm:max-w-full">
         {categories.map((cat) => {
           const count = categoryCounts[cat.key] || 0;
           const isActive = selectedCategory === cat.key;
@@ -186,7 +186,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Products Grid & Search */}
-      <div className="p-3 sm:p-6 bg-card border border-border rounded-3xl space-y-6 shadow-sm">
+      <div className="p-3 sm:p-6 bg-card border border-border rounded-3xl space-y-6 shadow-sm w-full max-w-[100vw] sm:max-w-full overflow-hidden">
         <div className="relative">
           <Search className={`absolute top-3.5 h-5 w-5 text-muted-foreground ${isRTL ? "right-4" : "left-4"}`} />
           <input
