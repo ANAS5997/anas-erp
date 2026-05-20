@@ -34,6 +34,12 @@ export default function SettingsPage() {
     activityLogs,
     backupData,
     restoreData,
+    updateInvoiceSettings,
+    storeSlogan,
+    invoiceFooterNotes,
+    taxRate,
+    receiptFormat,
+    currency,
   } = useStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,6 +49,15 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState(storePhone);
   const [address, setAddress] = useState(storeAddress);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Invoice custom forms
+  const [slogan, setSlogan] = useState(storeSlogan);
+  const [footerNotes, setFooterNotes] = useState(invoiceFooterNotes);
+  const [tax, setTax] = useState(String(taxRate));
+  const [format, setFormat] = useState(receiptFormat);
+  const [curr, setCurr] = useState(currency);
+  const [invoiceSaveSuccess, setInvoiceSaveSuccess] = useState(false);
+
   const [restoreStatus, setRestoreStatus] = useState<"idle" | "success" | "error">("idle");
 
   const handleSaveStore = (e: React.FormEvent) => {
@@ -50,6 +65,19 @@ export default function SettingsPage() {
     updateStoreDetails(name, phone, address);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
+  const handleSaveInvoiceSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateInvoiceSettings({
+      storeSlogan: slogan,
+      invoiceFooterNotes: footerNotes,
+      taxRate: parseFloat(tax) || 0,
+      receiptFormat: format,
+      currency: curr,
+    });
+    setInvoiceSaveSuccess(true);
+    setTimeout(() => setInvoiceSaveSuccess(false), 3000);
   };
 
   const handleExportBackup = () => {
@@ -152,6 +180,121 @@ export default function SettingsPage() {
                 {saveSuccess ? (
                   <span className="text-xs text-emerald-500 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-lg">
                     ✓ Store Details Updated
+                  </span>
+                ) : (
+                  <span></span>
+                )}
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-primary text-primary-foreground text-xs font-bold rounded-xl shadow-md hover:scale-[1.01] transition-all cursor-pointer"
+                >
+                  {t("btn_save")}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Invoice custom settings */}
+          <div className="p-6 bg-card border border-border rounded-3xl shadow-sm space-y-4">
+            <h3 className="font-bold text-lg border-b border-border pb-3 flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              <span>Invoice Customization & Receipt Branding</span>
+            </h3>
+
+            <form onSubmit={handleSaveInvoiceSettings} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground block">
+                    Shop Slogan / Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={slogan}
+                    onChange={(e) => setSlogan(e.target.value)}
+                    placeholder="e.g. Electrical & Home Appliances Shop"
+                    className="w-full bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground block">
+                    Currency Symbol
+                  </label>
+                  <select
+                    value={curr}
+                    onChange={(e) => setCurr(e.target.value)}
+                    className="w-full bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value="EGP">EGP (Egyptian Pound)</option>
+                    <option value="SAR">SAR (Saudi Riyal)</option>
+                    <option value="USD">USD (US Dollar)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="AED">AED (UAE Dirham)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground block">
+                    Receipt print size
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-muted/40 rounded-xl border border-border">
+                    <button
+                      type="button"
+                      onClick={() => setFormat("thermal")}
+                      className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                        format === "thermal" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                      }`}
+                    >
+                      Thermal 80mm
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormat("a4")}
+                      className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                        format === "a4" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                      }`}
+                    >
+                      Standard A4
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground block">
+                    Tax / VAT Rate (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={tax}
+                    onChange={(e) => setTax(e.target.value)}
+                    placeholder="e.g. 14 for 14% VAT"
+                    className="w-full bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground block">
+                  Invoice Footer Terms & Warranty Notice
+                </label>
+                <textarea
+                  rows={3}
+                  value={footerNotes}
+                  onChange={(e) => setFooterNotes(e.target.value)}
+                  placeholder="Terms, exchange policy, or warranty notes..."
+                  className="w-full bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-primary resize-none"
+                />
+              </div>
+
+              <div className="flex justify-between items-center pt-3">
+                {invoiceSaveSuccess ? (
+                  <span className="text-xs text-emerald-500 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-lg">
+                    ✓ Invoice Settings Saved
                   </span>
                 ) : (
                   <span></span>

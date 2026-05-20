@@ -44,6 +44,11 @@ interface AppState {
   storeName: string;
   storePhone: string;
   storeAddress: string;
+  storeSlogan: string;
+  invoiceFooterNotes: string;
+  taxRate: number;
+  receiptFormat: "thermal" | "a4";
+  currency: string;
   
   // Auth Actions
   setUser: (user: AppUser | null) => void;
@@ -51,6 +56,13 @@ interface AppState {
   setTheme: (theme: "dark" | "light") => void;
   setLanguage: (lang: "en" | "ar") => void;
   updateStoreDetails: (name: string, phone: string, address: string) => void;
+  updateInvoiceSettings: (settings: {
+    storeSlogan: string;
+    invoiceFooterNotes: string;
+    taxRate: number;
+    receiptFormat: "thermal" | "a4";
+    currency: string;
+  }) => void;
   
   // Customer Actions
   addCustomer: (customer: Omit<Customer, "id" | "createdAt">) => void;
@@ -333,6 +345,11 @@ export const useStore = create<AppState>()(
       storeName: "Smart Electric & Home",
       storePhone: "+201012345678",
       storeAddress: "15 El-Horreya Rd, Alexandria, Egypt",
+      storeSlogan: "Electrical & Home Appliances Shop",
+      invoiceFooterNotes: "Standard 1-year product replacement warranty applies for factory defects. Please retain this printout.",
+      taxRate: 0,
+      receiptFormat: "a4",
+      currency: "EGP",
       
       customers: sampleCustomers,
       products: sampleProducts,
@@ -366,6 +383,10 @@ export const useStore = create<AppState>()(
       updateStoreDetails: (storeName, storePhone, storeAddress) => {
         set({ storeName, storePhone, storeAddress });
         get().logActivity(`Store settings updated.`);
+      },
+      updateInvoiceSettings: (settings) => {
+        set(settings);
+        get().logActivity(`Invoice branding and customization settings updated.`);
       },
 
       // Customers
@@ -691,6 +712,11 @@ export const useStore = create<AppState>()(
         storeName: state.storeName,
         storePhone: state.storePhone,
         storeAddress: state.storeAddress,
+        storeSlogan: state.storeSlogan,
+        invoiceFooterNotes: state.invoiceFooterNotes,
+        taxRate: state.taxRate,
+        receiptFormat: state.receiptFormat,
+        currency: state.currency,
         customers: state.customers,
         products: state.products,
         orders: state.orders,
