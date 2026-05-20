@@ -186,7 +186,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Products Grid & Search */}
-      <div className="p-6 bg-card border border-border rounded-3xl space-y-6 shadow-sm">
+      <div className="p-3 sm:p-6 bg-card border border-border rounded-3xl space-y-6 shadow-sm">
         <div className="relative">
           <Search className={`absolute top-3.5 h-5 w-5 text-muted-foreground ${isRTL ? "right-4" : "left-4"}`} />
           <input
@@ -356,11 +356,11 @@ export default function ProductsPage() {
                           <p className="text-xs text-muted-foreground mt-0.5">{prod.description}</p>
                         )}
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <span className="text-[10px] font-bold bg-muted border border-border px-2 py-0.5 rounded-lg text-muted-foreground">
+                          <span className="text-[10px] font-bold bg-muted border border-border px-2 py-0.5 rounded-lg text-muted-foreground break-words max-w-full">
                             {t(`prod_categories.${prod.category}` as any)}
                           </span>
                           {prod.sku && (
-                            <span className="text-[10px] font-mono bg-muted border border-border px-2 py-0.5 rounded-lg text-muted-foreground">
+                            <span className="text-[10px] font-mono bg-muted border border-border px-2 py-0.5 rounded-lg text-muted-foreground break-all max-w-full">
                               {prod.sku}
                             </span>
                           )}

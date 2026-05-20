@@ -124,9 +124,10 @@ export default function LogsPage() {
       </div>
 
       {/* Logs Table Card */}
-      <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
+      <div className="p-3 sm:p-6 bg-card border border-border rounded-3xl shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-foreground border-collapse">
+          {/* Desktop Table View */}
+          <table className="w-full text-sm text-left text-foreground border-collapse hidden md:table">
             <thead>
               <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider font-semibold bg-muted/20">
                 <th className="px-6 py-4 w-48">{t("log_timestamp")}</th>
@@ -168,11 +169,11 @@ export default function LogsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
                             <User className="h-3.5 w-3.5" />
                           </div>
                           <div>
-                            <p className="font-semibold text-xs text-foreground">{log.userName}</p>
+                            <p className="font-semibold text-xs text-foreground truncate">{log.userName}</p>
                             <p className="text-[10px] text-muted-foreground font-mono">ID: {log.userId.substring(0, 8)}</p>
                           </div>
                         </div>
@@ -188,6 +189,57 @@ export default function LogsPage() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile Cards View */}
+          <div className="grid grid-cols-1 gap-3 md:hidden">
+            {filteredLogs.length === 0 ? (
+              <div className="px-4 py-8 text-center text-muted-foreground italic text-sm border border-dashed border-border rounded-2xl">
+                {t("no_data")}
+              </div>
+            ) : (
+              filteredLogs.map((log) => {
+                const logDate = new Date(log.timestamp);
+                return (
+                  <div key={log.id} className="bg-card border border-border p-3.5 rounded-2xl shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <User className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-xs text-foreground truncate">{log.userName}</p>
+                          <p className="text-[9px] text-muted-foreground font-mono">ID: {log.userId.substring(0, 8)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium bg-muted/50 px-2 py-1 rounded-lg">
+                        <Clock className="h-3 w-3 text-primary" />
+                        <span>
+                          {logDate.toLocaleTimeString(undefined, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-muted/30 p-2.5 rounded-xl border border-border/50">
+                      <p className="text-xs font-medium leading-relaxed text-foreground">
+                        {log.action}
+                      </p>
+                    </div>
+                    
+                    <div className="text-[9px] text-muted-foreground text-end px-1">
+                      {logDate.toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     </div>
