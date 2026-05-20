@@ -169,7 +169,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className={`flex-1 flex flex-col min-h-screen ${isRTL ? "md:pr-64" : "md:pl-64"}`}>
         
         {/* Topbar */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-card/85 backdrop-blur-md sticky top-0 z-10">
+        <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-border bg-card/85 backdrop-blur-md sticky top-0 z-10">
           <div className="flex items-center">
             {/* Mobile menu trigger */}
             <button
@@ -320,14 +320,14 @@ export function AppShell({ children }: AppShellProps) {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-4 md:p-8 pb-28 md:pb-8 max-w-7xl w-full mx-auto animate-fade-in">
+        <main className="flex-1 p-3 sm:p-4 md:p-8 pb-24 md:pb-8 max-w-7xl w-full mx-auto animate-fade-in">
           {children}
         </main>
         <SystemGuide />
       </div>
 
       {/* Floating Mobile Bottom Navigation Dock */}
-      <div className="fixed bottom-5 left-4 right-4 h-16 bg-card/85 backdrop-blur-xl border border-border/80 rounded-3xl shadow-xl z-30 flex md:hidden items-center justify-around px-4 transition-all duration-300">
+      <div className="fixed bottom-3 left-3 right-3 h-14 bg-card/90 backdrop-blur-xl border border-border/80 rounded-2xl shadow-lg z-30 flex md:hidden items-center justify-around px-2 transition-all duration-300">
         {[
           { name: t("nav_dashboard"), path: "/dashboard", icon: LayoutDashboard },
           { name: t("nav_products"), path: "/products", icon: ShoppingBag },
@@ -341,11 +341,11 @@ export function AppShell({ children }: AppShellProps) {
               key={item.path}
               href={item.path}
               className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-center transition-all ${
-                isActive ? "text-primary scale-110 font-bold" : "text-muted-foreground hover:text-foreground"
+                isActive ? "text-primary scale-105 font-bold" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className="h-5 w-5 mb-0.5" />
-              <span className="text-[9px] tracking-tight truncate max-w-[55px]">
+              <Icon className="h-4.5 w-4.5 mb-0.5" />
+              <span className="text-[8.5px] tracking-tight truncate max-w-[55px]">
                 {item.name}
               </span>
             </Link>
@@ -356,8 +356,8 @@ export function AppShell({ children }: AppShellProps) {
           onClick={() => setMobileMenuOpen(true)}
           className="flex flex-col items-center justify-center flex-1 h-full py-1 text-center text-muted-foreground hover:text-foreground transition-all"
         >
-          <Menu className="h-5 w-5 mb-0.5" />
-          <span className="text-[9px] tracking-tight">
+          <Menu className="h-4.5 w-4.5 mb-0.5" />
+          <span className="text-[8.5px] tracking-tight">
             {t("actions")}
           </span>
         </button>
