@@ -348,7 +348,7 @@ export const useStore = create<AppState>()(
       role: "admin",
       theme: "dark",
       language: "en",
-      adminPassword: "Admin@123456",
+      adminPassword: "anasali2006",
       employeeAccounts: [],
       
       storeName: "Smart Electric & Home",
