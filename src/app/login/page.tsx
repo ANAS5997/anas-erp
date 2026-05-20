@@ -146,8 +146,8 @@ export default function LoginPage() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] animate-pulse delay-700"></div>
 
         <div className="max-w-md text-center md:text-start space-y-6 relative z-10">
-          <div className="inline-flex items-center justify-center p-3 bg-primary/10 border border-primary/20 rounded-2xl mb-2 animate-bounce">
-            <Sparkles className="h-10 w-10 text-primary" />
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-full overflow-hidden border border-primary/30 bg-muted mb-2 animate-pulse shadow-xl shadow-primary/10">
+            <img src="/abo-anas-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-primary bg-clip-text text-transparent">
             {t("login_title")}

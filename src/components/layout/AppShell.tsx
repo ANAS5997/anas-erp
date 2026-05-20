@@ -104,11 +104,11 @@ export function AppShell({ children }: AppShellProps) {
       {/* Sidebar - Desktop */}
       <aside className={`hidden md:flex flex-col w-64 border-r border-border bg-card fixed top-0 bottom-0 ${isRTL ? "right-0" : "left-0"} z-20`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-border">
-          <Link href="/dashboard" className="flex items-center space-x-2 space-x-reverse">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-              ⚡
+          <Link href="/dashboard" className="flex items-center space-x-2.5 space-x-reverse">
+            <div className="h-9 w-9 rounded-full overflow-hidden border border-primary/30 flex items-center justify-center bg-muted shrink-0 shadow-sm">
+              <img src="/abo-anas-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
             </div>
-            <span className="font-bold text-lg tracking-tight truncate max-w-[170px]">{storeName}</span>
+            <span className="font-bold text-lg tracking-tight truncate max-w-[160px]">{storeName}</span>
           </Link>
         </div>
 
@@ -375,11 +375,11 @@ export function AppShell({ children }: AppShellProps) {
           {/* Drawer Content */}
           <aside className={`fixed top-0 bottom-0 w-72 bg-card border-r border-border p-6 flex flex-col z-50 ${isRTL ? "right-0" : "left-0"} animate-fade-in`}>
             <div className="flex items-center justify-between mb-8">
-              <Link href="/dashboard" className="flex items-center space-x-2 space-x-reverse" onClick={() => setMobileMenuOpen(false)}>
-                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-                  ⚡
+              <Link href="/dashboard" className="flex items-center space-x-2.5 space-x-reverse" onClick={() => setMobileMenuOpen(false)}>
+                <div className="h-9 w-9 rounded-full overflow-hidden border border-primary/30 flex items-center justify-center bg-muted shrink-0 shadow-sm">
+                  <img src="/abo-anas-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
                 </div>
-                <span className="font-bold text-lg truncate max-w-[170px]">{storeName}</span>
+                <span className="font-bold text-lg truncate max-w-[160px]">{storeName}</span>
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}
