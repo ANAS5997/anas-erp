@@ -26,6 +26,7 @@ import {
   History,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
+import { SystemGuide } from "./SystemGuide";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -322,6 +323,7 @@ export function AppShell({ children }: AppShellProps) {
         <main className="flex-1 p-4 md:p-8 pb-28 md:pb-8 max-w-7xl w-full mx-auto animate-fade-in">
           {children}
         </main>
+        <SystemGuide />
       </div>
 
       {/* Floating Mobile Bottom Navigation Dock */}
