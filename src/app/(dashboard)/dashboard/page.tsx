@@ -18,6 +18,10 @@ import {
   ShieldCheck,
   PiggyBank,
   RefreshCw,
+  Target,
+  Edit3,
+  Zap,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -44,11 +48,19 @@ export default function DashboardPage() {
     diff: number;
   } | null>(null);
 
-  // Sync opening cash from localStorage if present
+  // Daily target/goal state
+  const [dailyGoalInput, setDailyGoalInput] = useState("3000");
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+
+  // Sync opening cash and goals from localStorage if present
   useEffect(() => {
     const saved = localStorage.getItem("abo_anas_opening_cash");
     if (saved) {
       setOpeningCashInput(saved);
+    }
+    const savedGoal = localStorage.getItem("abo_anas_daily_goal");
+    if (savedGoal) {
+      setDailyGoalInput(savedGoal);
     }
     const savedLog = localStorage.getItem("abo_anas_reconciliation_log");
     if (savedLog) {
@@ -170,15 +182,24 @@ export default function DashboardPage() {
     return orders.slice(0, 5);
   }, [orders]);
 
-  // Drawer calculations
+  // Drawer and Goal calculations
   const openingCash = parseFloat(openingCashInput) || 0;
   const expectedCashInDrawer = openingCash + stats.dailyRevenue - stats.dailyExpenses;
   const actualCashCounted = actualCashInput !== "" ? parseFloat(actualCashInput) || 0 : null;
   const drawerDifference = actualCashCounted !== null ? actualCashCounted - expectedCashInDrawer : 0;
 
+  const goalVal = parseFloat(dailyGoalInput) || 3000;
+  const goalProgressPercent = Math.min(100, Math.max(0, (stats.dailyRevenue / goalVal) * 100));
+
   const handleSaveOpeningCash = (val: string) => {
     setOpeningCashInput(val);
     localStorage.setItem("abo_anas_opening_cash", val);
+  };
+
+  const handleSaveDailyGoal = (val: string) => {
+    setDailyGoalInput(val);
+    localStorage.setItem("abo_anas_daily_goal", val);
+    setIsEditingGoal(false);
   };
 
   const handleReconcileDrawer = () => {
@@ -276,6 +297,156 @@ export default function DashboardPage() {
         <div className="flex items-center space-x-2 space-x-reverse bg-card border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-semibold w-fit">
           <Calendar className="h-4 w-4 text-primary" />
           <span>{formatDate(new Date())}</span>
+        </div>
+      </div>
+
+      {/* 🎯 Quick Features Section (Daily Goal Tracker & Shortcuts) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Daily Sales Goal Tracker Card */}
+        <div className="p-6 bg-card border border-border rounded-3xl shadow-sm flex flex-col justify-between space-y-4 glow-card relative overflow-hidden">
+          {/* Decorative background glow */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 text-primary border border-primary/20 rounded-xl">
+                <Target className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm text-foreground">
+                  {language === "ar" ? "هدف المبيعات اليومي" : "Daily Sales Goal"}
+                </h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {language === "ar" ? "حدد هدفك لمبيعات اليوم وتابع إنجازك" : "Set targets and track completion"}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-1">
+              {isEditingGoal ? (
+                <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl">
+                  <input
+                    type="number"
+                    defaultValue={dailyGoalInput}
+                    onBlur={(e) => handleSaveDailyGoal(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSaveDailyGoal(e.currentTarget.value);
+                      }
+                    }}
+                    className="w-16 bg-transparent border-none text-xs font-bold text-center focus:outline-none"
+                    autoFocus
+                  />
+                  <button className="p-1 text-emerald-500 hover:bg-emerald-500/10 rounded-lg">
+                    <Check className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsEditingGoal(true)}
+                  className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer"
+                  title={language === "ar" ? "تعديل الهدف" : "Edit Daily Goal"}
+                >
+                  <Edit3 className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-end text-xs font-semibold">
+              <span className="text-muted-foreground">
+                {language === "ar" ? "المبيعات المحققة اليوم" : "Collected Today"}
+              </span>
+              <span className="text-foreground">
+                <span className="font-extrabold text-primary">{formatCurrency(stats.dailyRevenue)}</span> / {formatCurrency(goalVal)}
+              </span>
+            </div>
+            
+            {/* Glowing progress bar */}
+            <div className="w-full h-3 bg-muted rounded-full overflow-hidden relative">
+              <div
+                style={{ width: `${goalProgressPercent}%` }}
+                className="h-full bg-gradient-to-r from-primary to-violet-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"
+              ></div>
+            </div>
+            
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="font-bold text-muted-foreground">{goalProgressPercent.toFixed(0)}% {language === "ar" ? "مكتمل" : "completed"}</span>
+              <span className="font-bold text-emerald-500">
+                {goalProgressPercent >= 100 
+                  ? (language === "ar" ? "🎉 تم تحقيق الهدف بالكامل!" : "🎉 Goal fully accomplished!")
+                  : (language === "ar" ? "💪 استمر يا أبو أنس، أنت تقترب!" : "💪 Keep going Abo Anas, you're close!")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick actions Hub */}
+        <div className="p-6 bg-card border border-border rounded-3xl shadow-sm flex flex-col justify-between space-y-4 glow-card">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-violet-500/10 text-violet-500 border border-violet-500/20 rounded-xl">
+              <Zap className="h-5 w-5 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-sm text-foreground">
+                {language === "ar" ? "أدوات وإجراءات سريعة" : "ERP Quick Actions"}
+              </h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {language === "ar" ? "وصول فوري لأهم المهام التشغيلية للمتجر" : "Instant shortcuts to major store operations"}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+            <Link
+              href="/sales/new"
+              className="p-3 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-2xl flex flex-col items-center text-center space-y-1.5 transition-all group cursor-pointer"
+            >
+              <div className="p-2 bg-primary/10 text-primary border border-primary/20 rounded-xl group-hover:scale-110 transition-all">
+                <ShoppingBag className="h-4 w-4" />
+              </div>
+              <span className="text-[11px] font-bold text-foreground truncate max-w-full">
+                {language === "ar" ? "فاتورة جديدة" : "New Sale"}
+              </span>
+            </Link>
+
+            <Link
+              href="/expenses"
+              className="p-3 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20 rounded-2xl flex flex-col items-center text-center space-y-1.5 transition-all group cursor-pointer"
+            >
+              <div className="p-2 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl group-hover:scale-110 transition-all">
+                <TrendingDown className="h-4 w-4" />
+              </div>
+              <span className="text-[11px] font-bold text-foreground truncate max-w-full">
+                {language === "ar" ? "سجل مصروفاً" : "Add Expense"}
+              </span>
+            </Link>
+
+            <Link
+              href="/products"
+              className="p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex flex-col items-center text-center space-y-1.5 transition-all group cursor-pointer"
+            >
+              <div className="p-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl group-hover:scale-110 transition-all">
+                <Package className="h-4 w-4" />
+              </div>
+              <span className="text-[11px] font-bold text-foreground truncate max-w-full">
+                {language === "ar" ? "صنف جديد" : "Add Product"}
+              </span>
+            </Link>
+
+            <Link
+              href="/debts"
+              className="p-3 bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 rounded-2xl flex flex-col items-center text-center space-y-1.5 transition-all group cursor-pointer"
+            >
+              <div className="p-2 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-xl group-hover:scale-110 transition-all">
+                <Users className="h-4 w-4" />
+              </div>
+              <span className="text-[11px] font-bold text-foreground truncate max-w-full">
+                {language === "ar" ? "الديون والأقساط" : "Debts Ledger"}
+              </span>
+            </Link>
+          </div>
         </div>
       </div>
 
