@@ -12,6 +12,7 @@ import {
   Receipt,
   CircleDollarSign,
   TrendingUp,
+  TrendingDown,
   Settings,
   LogOut,
   Bell,
@@ -22,6 +23,7 @@ import {
   X,
   User,
   Shield,
+  History,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 
@@ -55,7 +57,9 @@ export function AppShell({ children }: AppShellProps) {
     { name: t("nav_products"), path: "/products", icon: ShoppingBag },
     { name: t("nav_sales"), path: "/sales", icon: Receipt },
     { name: t("nav_debts"), path: "/debts", icon: CircleDollarSign },
+    { name: t("nav_expenses"), path: "/expenses", icon: TrendingDown },
     { name: t("nav_reports"), path: "/reports", icon: TrendingUp },
+    { name: t("nav_logs"), path: "/logs", icon: History },
     { name: t("nav_settings"), path: "/settings", icon: Settings },
   ];
 
@@ -315,9 +319,46 @@ export function AppShell({ children }: AppShellProps) {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto animate-fade-in">
+        <main className="flex-1 p-4 md:p-8 pb-28 md:pb-8 max-w-7xl w-full mx-auto animate-fade-in">
           {children}
         </main>
+      </div>
+
+      {/* Floating Mobile Bottom Navigation Dock */}
+      <div className="fixed bottom-5 left-4 right-4 h-16 bg-card/85 backdrop-blur-xl border border-border/80 rounded-3xl shadow-xl z-30 flex md:hidden items-center justify-around px-4 transition-all duration-300">
+        {[
+          { name: t("nav_dashboard"), path: "/dashboard", icon: LayoutDashboard },
+          { name: t("nav_products"), path: "/products", icon: ShoppingBag },
+          { name: t("nav_sales"), path: "/sales", icon: Receipt },
+          { name: t("nav_debts"), path: "/debts", icon: CircleDollarSign },
+        ].map((item) => {
+          const isActive = pathname === item.path || (item.path !== "/dashboard" && pathname.startsWith(item.path));
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.path}
+              href={item.path}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-center transition-all ${
+                isActive ? "text-primary scale-110 font-bold" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-5 w-5 mb-0.5" />
+              <span className="text-[9px] tracking-tight truncate max-w-[55px]">
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
+        {/* More Button (Trigger mobile drawer) */}
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 h-full py-1 text-center text-muted-foreground hover:text-foreground transition-all"
+        >
+          <Menu className="h-5 w-5 mb-0.5" />
+          <span className="text-[9px] tracking-tight">
+            {t("actions")}
+          </span>
+        </button>
       </div>
 
       {/* Sidebar - Mobile Drawer */}

@@ -33,6 +33,7 @@ export default function ProductsPage() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<ProductCategory>("electrical_tools");
   const [price, setPrice] = useState("");
+  const [costPrice, setCostPrice] = useState("");
   const [stockQty, setStockQty] = useState("");
   const [lowStockThreshold, setLowStockThreshold] = useState("5");
   const [sku, setSku] = useState("");
@@ -72,6 +73,7 @@ export default function ProductsPage() {
     setName("");
     setCategory("electrical_tools");
     setPrice("");
+    setCostPrice("");
     setStockQty("");
     setLowStockThreshold("5");
     setSku("");
@@ -90,6 +92,7 @@ export default function ProductsPage() {
     setName(prod.name);
     setCategory(prod.category);
     setPrice(String(prod.price));
+    setCostPrice(prod.costPrice ? String(prod.costPrice) : "");
     setStockQty(String(prod.stockQty));
     setLowStockThreshold(String(prod.lowStockThreshold));
     setSku(prod.sku || "");
@@ -104,6 +107,7 @@ export default function ProductsPage() {
     if (!name.trim() || !price || !stockQty) return;
 
     const parsedPrice = parseFloat(price);
+    const parsedCost = parseFloat(costPrice) || 0;
     const parsedStock = parseInt(stockQty);
     const parsedMin = parseInt(lowStockThreshold);
 
@@ -113,6 +117,7 @@ export default function ProductsPage() {
       name,
       category,
       price: parsedPrice,
+      costPrice: parsedCost,
       stockQty: parsedStock,
       lowStockThreshold: isNaN(parsedMin) ? 5 : parsedMin,
       sku: sku.trim() || undefined,
@@ -201,7 +206,14 @@ export default function ProductsPage() {
                 <th className="px-6 py-4">{t("prod_name")}</th>
                 <th className="px-6 py-4">SKU / Barcode</th>
                 <th className="px-6 py-4">{t("prod_category")}</th>
-                <th className="px-6 py-4">{t("prod_price")}</th>
+                {role === "admin" && (
+                  <>
+                    <th className="px-6 py-4">{t("cost_price")}</th>
+                    <th className="px-6 py-4">{t("prod_price")}</th>
+                    <th className="px-6 py-4">{t("profit_margin")}</th>
+                  </>
+                )}
+                {role !== "admin" && <th className="px-6 py-4">{t("prod_price")}</th>}
                 <th className="px-6 py-4 text-center">{t("prod_stock")}</th>
                 <th className="px-6 py-4 text-end">{t("actions")}</th>
               </tr>
@@ -209,13 +221,19 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-border">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground italic">
+                  <td colSpan={role === "admin" ? 8 : 6} className="px-6 py-12 text-center text-muted-foreground italic">
                     {t("no_data")}
                   </td>
                 </tr>
               ) : (
                 filteredProducts.map((prod) => {
                   const isLowStock = prod.stockQty <= prod.lowStockThreshold;
+                  
+                  const cost = prod.costPrice || 0;
+                  const profit = prod.price - cost;
+                  const markupPercent = cost > 0 ? (profit / cost) * 100 : 0;
+                  const potentialProfit = profit * prod.stockQty;
+
                   return (
                     <tr
                       key={prod.id}
@@ -239,9 +257,34 @@ export default function ProductsPage() {
                           {t(`prod_categories.${prod.category}` as any)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-extrabold text-base">
-                        {formatCurrency(prod.price)}
-                      </td>
+                      {role === "admin" && (
+                        <>
+                          <td className="px-6 py-4 font-extrabold text-base text-rose-500">
+                            {formatCurrency(cost)}
+                          </td>
+                          <td className="px-6 py-4 font-extrabold text-base text-emerald-500">
+                            {formatCurrency(prod.price)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-xs">
+                              <span className="font-bold text-emerald-500">+{formatCurrency(profit)}</span>
+                              <span className="text-[10px] text-muted-foreground block">
+                                {markupPercent.toFixed(0)}% markup
+                              </span>
+                              {prod.stockQty > 0 && (
+                                <span className="text-[9px] text-primary font-bold block mt-0.5" title={t("potential_profit") as string}>
+                                  Pot: {formatCurrency(potentialProfit)}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </>
+                      )}
+                      {role !== "admin" && (
+                        <td className="px-6 py-4 font-extrabold text-base">
+                          {formatCurrency(prod.price)}
+                        </td>
+                      )}
                       <td className="px-6 py-4 text-center">
                         <div className="inline-flex flex-col items-center">
                           <span
@@ -357,10 +400,10 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground block">
-                    {t("prod_price")} ($) *
+                    {t("prod_price")} (EGP) *
                   </label>
                   <input
                     type="number"
@@ -374,6 +417,23 @@ export default function ProductsPage() {
                   />
                 </div>
 
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground block">
+                    {t("cost_price")} (EGP)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Cost"
+                    value={costPrice}
+                    onChange={(e) => setCostPrice(e.target.value)}
+                    className="w-full bg-muted/50 border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground block">
                     {t("prod_stock")} *

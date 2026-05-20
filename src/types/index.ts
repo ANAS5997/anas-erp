@@ -35,6 +35,7 @@ export interface Product {
   name: string;
   category: ProductCategory;
   price: number;
+  costPrice?: number;
   stockQty: number;
   lowStockThreshold: number;
   sku?: string;
@@ -51,6 +52,7 @@ export interface OrderItem {
   product?: Product;
   qty: number;
   unitPrice: number;
+  costPrice?: number;
   subtotal: number;
 }
 
@@ -100,3 +102,16 @@ export interface DashboardStats {
   recentOrders: Order[];
   revenueChart: { date: string; revenue: number }[];
 }
+
+export type ExpenseCategory = "rent" | "utilities" | "salaries" | "inventory" | "marketing" | "other";
+
+export interface Expense {
+  id: string;
+  title: string;
+  category: ExpenseCategory;
+  amount: number;
+  date: string;
+  notes?: string;
+  createdAt: string;
+}
+

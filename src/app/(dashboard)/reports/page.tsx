@@ -30,7 +30,7 @@ import {
 
 export default function ReportsPage() {
   const { t } = useTranslation();
-  const { orders, products, customers } = useStore();
+  const { orders, products, customers, expenses } = useStore();
   const [reportTimeframe, setReportTimeframe] = useState<"daily" | "weekly" | "monthly">("weekly");
 
   // Calculations for Reports page
@@ -38,6 +38,10 @@ export default function ReportsPage() {
     const totalOrderSales = orders.reduce((sum, o) => sum + o.total, 0);
     const totalCollectedCash = orders.reduce((sum, o) => sum + o.paid, 0);
     const totalDebtOutstanding = orders.reduce((sum, o) => sum + o.remaining, 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalCogs = orders.reduce((sum, o) => sum + o.items.reduce((itemSum, item) => itemSum + (item.qty * (item.costPrice || 0)), 0), 0);
+    const grossProfit = totalOrderSales - totalCogs;
+    const netProfit = grossProfit - totalExpenses;
     const averageOrderValue = orders.length > 0 ? totalOrderSales / orders.length : 0;
 
     // Category Sales Distribution
@@ -74,7 +78,7 @@ export default function ReportsPage() {
       .slice(0, 5);
 
     // Sales charts based on selected timeframe
-    let chartData: { label: string; sales: number; collected: number }[] = [];
+    let chartData: { label: string; sales: number; collected: number; expenses: number }[] = [];
 
     if (reportTimeframe === "daily") {
       // Last 7 days
@@ -88,10 +92,14 @@ export default function ReportsPage() {
         const matchingOrders = orders.filter(
           (o) => new Date(o.createdAt).toDateString() === day.toDateString()
         );
+        const matchingExpenses = expenses.filter(
+          (e) => new Date(e.date).toDateString() === day.toDateString()
+        );
         return {
           label: day.toLocaleDateString(undefined, { weekday: "short" }),
           sales: matchingOrders.reduce((sum, o) => sum + o.total, 0),
           collected: matchingOrders.reduce((sum, o) => sum + o.paid, 0),
+          expenses: matchingExpenses.reduce((sum, e) => sum + e.amount, 0),
         };
       });
     } else if (reportTimeframe === "weekly") {
@@ -108,10 +116,16 @@ export default function ReportsPage() {
           return d >= start && d <= end;
         });
 
+        const matchingExpenses = expenses.filter((e) => {
+          const d = new Date(e.date);
+          return d >= start && d <= end;
+        });
+
         return {
           label,
           sales: matchingOrders.reduce((sum, o) => sum + o.total, 0),
           collected: matchingOrders.reduce((sum, o) => sum + o.paid, 0),
+          expenses: matchingExpenses.reduce((sum, e) => sum + e.amount, 0),
         };
       }).reverse();
     } else {
@@ -127,10 +141,15 @@ export default function ReportsPage() {
           const d = new Date(o.createdAt);
           return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
         });
+        const matchingExpenses = expenses.filter((e) => {
+          const d = new Date(e.date);
+          return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
+        });
         return {
           label: month.toLocaleDateString(undefined, { month: "short" }),
           sales: matchingOrders.reduce((sum, o) => sum + o.total, 0),
           collected: matchingOrders.reduce((sum, o) => sum + o.paid, 0),
+          expenses: matchingExpenses.reduce((sum, e) => sum + e.amount, 0),
         };
       });
     }
@@ -139,12 +158,16 @@ export default function ReportsPage() {
       totalOrderSales,
       totalCollectedCash,
       totalDebtOutstanding,
+      totalExpenses,
+      totalCogs,
+      grossProfit,
+      netProfit,
       averageOrderValue,
       categoryData,
       topSellingProducts,
       chartData,
     };
-  }, [orders, products, reportTimeframe, t]);
+  }, [orders, products, expenses, reportTimeframe, t]);
 
   // Export reports to Excel (JSON download)
   const handleExportJSON = () => {
@@ -156,10 +179,15 @@ export default function ReportsPage() {
         totalCollectedCash: stats.totalCollectedCash,
         totalDebtOutstanding: stats.totalDebtOutstanding,
         averageOrderValue: stats.averageOrderValue,
+        totalExpenses: stats.totalExpenses,
+        totalCogs: stats.totalCogs,
+        grossProfit: stats.grossProfit,
+        netProfit: stats.netProfit,
       },
       topProducts: stats.topSellingProducts,
       categoryShare: stats.categoryData,
       rawOrders: orders,
+      rawExpenses: expenses,
     };
 
     const blob = new Blob([JSON.stringify(reportData, null, 2)], {
@@ -208,11 +236,41 @@ export default function ReportsPage() {
       </div>
 
       {/* Reports Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 font-sans">
         <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
           <span className="text-xs font-bold text-muted-foreground uppercase">Sales Revenue</span>
           <p className="text-2xl font-extrabold tracking-tight mt-2">{formatCurrency(stats.totalOrderSales)}</p>
           <span className="text-[10px] text-muted-foreground mt-1 block">Invoiced order totals</span>
+        </div>
+
+        <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
+          <span className="text-xs font-bold text-muted-foreground uppercase">Cost of Goods (COGS)</span>
+          <p className="text-2xl font-extrabold tracking-tight text-rose-500 mt-2">{formatCurrency(stats.totalCogs)}</p>
+          <span className="text-[10px] text-muted-foreground mt-1 block">Acquisition cost of sales</span>
+        </div>
+
+        <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
+          <span className="text-xs font-bold text-muted-foreground uppercase">{t("gross_profit")}</span>
+          <p className="text-2xl font-extrabold tracking-tight text-emerald-500 mt-2">
+            {formatCurrency(stats.grossProfit)}
+          </p>
+          <span className="text-[10px] text-muted-foreground mt-1 block">{stats.totalOrderSales > 0 ? ((stats.grossProfit / stats.totalOrderSales) * 100).toFixed(0) : 0}% margin</span>
+        </div>
+
+        <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
+          <span className="text-xs font-bold text-muted-foreground uppercase">{t("dash_expenses")}</span>
+          <p className="text-2xl font-extrabold tracking-tight text-rose-500 mt-2">
+            {formatCurrency(stats.totalExpenses)}
+          </p>
+          <span className="text-[10px] text-muted-foreground mt-1 block">Operating overheads</span>
+        </div>
+
+        <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
+          <span className="text-xs font-bold text-muted-foreground uppercase">{t("dash_net_profit")}</span>
+          <p className={`text-2xl font-extrabold tracking-tight mt-2 ${stats.netProfit >= 0 ? 'text-cyan-500' : 'text-rose-500'}`}>
+            {formatCurrency(stats.netProfit)}
+          </p>
+          <span className="text-[10px] text-muted-foreground mt-1 block">Accrual net income</span>
         </div>
 
         <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
@@ -222,29 +280,31 @@ export default function ReportsPage() {
           </p>
           <span className="text-[10px] text-muted-foreground mt-1 block">Liquidity in register</span>
         </div>
-
-        <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
-          <span className="text-xs font-bold text-muted-foreground uppercase">Total Outstandings</span>
-          <p className="text-2xl font-extrabold tracking-tight text-rose-500 mt-2">
-            {formatCurrency(stats.totalDebtOutstanding)}
-          </p>
-          <span className="text-[10px] text-muted-foreground mt-1 block">Pending client debts</span>
-        </div>
-
-        <div className="p-6 bg-card border border-border rounded-3xl shadow-sm">
-          <span className="text-xs font-bold text-muted-foreground uppercase">Average Invoice Value</span>
-          <p className="text-2xl font-extrabold tracking-tight mt-2">{formatCurrency(stats.averageOrderValue)}</p>
-          <span className="text-[10px] text-muted-foreground mt-1 block">Per customer basket spend</span>
-        </div>
       </div>
 
       {/* Sales Trend chart */}
       <div className="p-6 bg-card border border-border rounded-3xl space-y-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h3 className="font-bold text-lg flex items-center gap-1.5">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <span>Sales Trends & Revenue Flows</span>
-          </h3>
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <h3 className="font-bold text-lg flex items-center gap-1.5">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <span>Sales Trends & Revenue Flows</span>
+            </h3>
+            <div className="flex items-center gap-3 text-xs bg-muted/20 px-3 py-1 rounded-xl border border-border/50">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-primary block"></span>
+                <span className="text-muted-foreground">Order Value</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 block"></span>
+                <span className="text-muted-foreground">Cash Collected</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-rose-500 block"></span>
+                <span className="text-muted-foreground">Expenses</span>
+              </div>
+            </div>
+          </div>
 
           <div className="flex items-center gap-1 bg-muted/40 p-1 border border-border rounded-xl print:hidden">
             {(["daily", "weekly", "monthly"] as const).map((time) => (
@@ -279,6 +339,7 @@ export default function ReportsPage() {
               />
               <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Order Value" />
               <Bar dataKey="collected" fill="#10b981" radius={[4, 4, 0, 0]} name="Cash Collected" />
+              <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} name={t("dash_expenses")} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -339,7 +339,7 @@ export default function NewSalePage() {
               <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider block">
                 Selected checkout tray
               </span>
-              <div className="border border-border rounded-2xl overflow-hidden bg-muted/10">
+              <div className="border border-border rounded-2xl overflow-x-auto bg-muted/10">
                 <table className="w-full text-xs text-left">
                   <thead>
                     <tr className="bg-muted/30 border-b border-border font-semibold text-muted-foreground">

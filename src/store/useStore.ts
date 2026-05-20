@@ -10,6 +10,7 @@ import type {
   Notification,
   ProductCategory,
   OrderStatus,
+  Expense,
 } from "@/types";
 import { calcRemaining, getDebtStatus } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ interface AppState {
   payments: Payment[];
   notifications: Notification[];
   activityLogs: ActivityLog[];
+  expenses: Expense[];
   
   // Settings / Store details
   storeName: string;
@@ -75,10 +77,15 @@ interface AppState {
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   
-  // System Logs & Backup
+  // Logger
   logActivity: (action: string) => void;
+  clearActivityLogs: () => void;
   backupData: () => string;
   restoreData: (backupJson: string) => boolean;
+
+  // Expense Actions
+  addExpense: (expense: Omit<Expense, "id" | "createdAt">) => void;
+  deleteExpense: (id: string) => void;
 }
 
 // Initial Sample Data for Products
@@ -88,6 +95,7 @@ const sampleProducts: Product[] = [
     name: "Tornado Electric Fan 16 Inch",
     category: "home_appliances",
     price: 100,
+    costPrice: 70,
     stockQty: 8,
     lowStockThreshold: 5,
     sku: "E-FAN-1601",
@@ -99,6 +107,7 @@ const sampleProducts: Product[] = [
     name: "LED Ceiling Panel 24W Warm",
     category: "lighting",
     price: 15,
+    costPrice: 10,
     stockQty: 45,
     lowStockThreshold: 10,
     sku: "L-LED-24W-W",
@@ -110,6 +119,7 @@ const sampleProducts: Product[] = [
     name: "Philips Electric Kettle 1.7L",
     category: "kitchen_devices",
     price: 45,
+    costPrice: 30,
     stockQty: 3,
     lowStockThreshold: 5, // Triggers warning!
     sku: "K-KET-17",
@@ -121,6 +131,7 @@ const sampleProducts: Product[] = [
     name: "Copper Cable 2.5mm Roll (100m)",
     category: "cables",
     price: 85,
+    costPrice: 60,
     stockQty: 12,
     lowStockThreshold: 5,
     sku: "C-CAB-2.5",
@@ -132,6 +143,7 @@ const sampleProducts: Product[] = [
     name: "Digital Multimeter Tester",
     category: "electrical_tools",
     price: 30,
+    costPrice: 20,
     stockQty: 15,
     lowStockThreshold: 3,
     sku: "T-MUL-DGT",
@@ -279,6 +291,37 @@ const sampleNotifications: Notification[] = [
   },
 ];
 
+// Initial Sample Data for Expenses
+const sampleExpenses: Expense[] = [
+  {
+    id: "exp_1",
+    title: "Monthly Shop Rent",
+    category: "rent",
+    amount: 150,
+    date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    notes: "Paid to landlord for May",
+    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "exp_2",
+    title: "Electricity Bill",
+    category: "utilities",
+    amount: 35,
+    date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    notes: "Main shop meter",
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "exp_3",
+    title: "Store assistant weekly wage",
+    category: "salaries",
+    amount: 50,
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    notes: "Paid to Khaled Salem",
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -296,6 +339,7 @@ export const useStore = create<AppState>()(
       orders: sampleOrders,
       payments: samplePayments,
       notifications: sampleNotifications,
+      expenses: sampleExpenses,
       activityLogs: [
         {
           id: "log_init",
@@ -355,6 +399,7 @@ export const useStore = create<AppState>()(
       addProduct: (prodData) => {
         const newProd: Product = {
           ...prodData,
+          costPrice: prodData.costPrice ?? 0,
           id: `prod_${Date.now()}`,
           createdAt: new Date().toISOString(),
         };
@@ -427,6 +472,7 @@ export const useStore = create<AppState>()(
             productId: it.productId,
             qty: it.qty,
             unitPrice: it.unitPrice,
+            costPrice: originalProd?.costPrice ?? 0,
             subtotal,
           };
         });
@@ -527,6 +573,26 @@ export const useStore = create<AppState>()(
         get().logActivity(`Recorded payment of ${amount} EGP for invoice ${orderId} (${customerName})`);
       },
 
+      // Expenses Actions
+      addExpense: (expData) => {
+        const newExp: Expense = {
+          ...expData,
+          id: `exp_${Date.now()}`,
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          expenses: [newExp, ...state.expenses],
+        }));
+        get().logActivity(`Added expense: ${newExp.title} - ${newExp.amount} EGP`);
+      },
+      deleteExpense: (id) => {
+        const title = get().expenses.find((e) => e.id === id)?.title || id;
+        set((state) => ({
+          expenses: state.expenses.filter((e) => e.id !== id),
+        }));
+        get().logActivity(`Deleted expense: ${title}`);
+      },
+
       // Notifications
       addNotification: (type, message) => {
         const notif: Notification = {
@@ -564,6 +630,9 @@ export const useStore = create<AppState>()(
           activityLogs: [log, ...state.activityLogs.slice(0, 199)], // Cap at 200 logs
         }));
       },
+      clearActivityLogs: () => {
+        set({ activityLogs: [] });
+      },
 
       // Backup & Restore
       backupData: () => {
@@ -574,6 +643,7 @@ export const useStore = create<AppState>()(
           orders: state.orders,
           payments: state.payments,
           notifications: state.notifications,
+          expenses: state.expenses,
           activityLogs: state.activityLogs,
           storeName: state.storeName,
           storePhone: state.storePhone,
@@ -597,6 +667,7 @@ export const useStore = create<AppState>()(
               orders: parsed.orders,
               payments: parsed.payments,
               notifications: parsed.notifications,
+              expenses: parsed.expenses || [],
               activityLogs: parsed.activityLogs || [],
               storeName: parsed.storeName || get().storeName,
               storePhone: parsed.storePhone || get().storePhone,
@@ -625,6 +696,7 @@ export const useStore = create<AppState>()(
         orders: state.orders,
         payments: state.payments,
         notifications: state.notifications,
+        expenses: state.expenses,
         activityLogs: state.activityLogs,
         user: state.user,
         role: state.role,

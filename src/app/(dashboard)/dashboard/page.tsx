@@ -6,6 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import {
   TrendingUp,
+  TrendingDown,
   Users,
   AlertTriangle,
   DollarSign,
@@ -30,7 +31,7 @@ import {
 
 export default function DashboardPage() {
   const { t, isRTL } = useTranslation();
-  const { orders, customers, products, notifications } = useStore();
+  const { orders, customers, products, notifications, expenses } = useStore();
 
   // 1. Calculate Stats
   const stats = useMemo(() => {
@@ -43,8 +44,23 @@ export default function DashboardPage() {
     // Total Revenue (total paid across all orders)
     const totalRevenue = orders.reduce((acc, o) => acc + o.paid, 0);
 
+    // Total Sales Value (accrual sales volume)
+    const totalSalesValue = orders.reduce((acc, o) => acc + o.total, 0);
+
     // Pending Debts (total remaining across all orders)
     const pendingDebts = orders.reduce((acc, o) => acc + o.remaining, 0);
+
+    // Cost of Goods Sold (COGS)
+    const totalCogs = orders.reduce((acc, o) => acc + o.items.reduce((sub, item) => sub + (item.qty * (item.costPrice || 0)), 0), 0);
+
+    // Gross Profit (Total Sales Value - COGS)
+    const grossProfit = totalSalesValue - totalCogs;
+
+    // Total Expenses
+    const totalExpenses = expenses.reduce((acc, e) => acc + e.amount, 0);
+
+    // Net Operating Profit (Gross Profit - Expenses)
+    const netProfit = grossProfit - totalExpenses;
 
     // Daily Revenue (paid amount of orders placed today)
     const todayStr = new Date().toDateString();
@@ -106,13 +122,17 @@ export default function DashboardPage() {
       totalSalesCount,
       totalCustomersCount,
       totalRevenue,
+      totalSalesValue,
       pendingDebts,
+      totalExpenses,
+      grossProfit,
+      netProfit,
       dailyRevenue,
       topProducts,
       lowStockAlerts,
       chartData,
     };
-  }, [orders, customers, products]);
+  }, [orders, customers, products, expenses]);
 
   const recentOrders = useMemo(() => {
     return orders.slice(0, 5);
@@ -122,30 +142,50 @@ export default function DashboardPage() {
     {
       title: t("dash_total_sales"),
       value: stats.totalSalesCount,
-      subtitle: `${formatCurrency(stats.totalRevenue)} collected`,
+      subtitle: `${formatCurrency(stats.totalSalesValue)} volume`,
       icon: ShoppingBag,
       color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      borderColor: "border-t-blue-500",
     },
     {
-      title: t("dash_total_customers"),
-      value: stats.totalCustomersCount,
-      subtitle: "Registered clients",
-      icon: Users,
+      title: t("gross_profit"),
+      value: formatCurrency(stats.grossProfit),
+      subtitle: `${stats.totalSalesValue > 0 ? ((stats.grossProfit / stats.totalSalesValue) * 100).toFixed(0) : 0}% margin`,
+      icon: TrendingUp,
       color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+      borderColor: "border-t-emerald-500",
+    },
+    {
+      title: t("dash_expenses"),
+      value: formatCurrency(stats.totalExpenses),
+      subtitle: "Operating overheads",
+      icon: TrendingDown,
+      color: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+      borderColor: "border-t-rose-500",
+    },
+    {
+      title: t("dash_net_profit"),
+      value: formatCurrency(stats.netProfit),
+      subtitle: "Accrual net income",
+      icon: DollarSign,
+      color: stats.netProfit >= 0 ? "bg-cyan-500/10 text-cyan-500 border-cyan-500/20" : "bg-rose-500/10 text-rose-500 border-rose-500/20",
+      borderColor: stats.netProfit >= 0 ? "border-t-cyan-500" : "border-t-rose-500",
     },
     {
       title: t("dash_pending_debts"),
       value: formatCurrency(stats.pendingDebts),
-      subtitle: "Unpaid outstanding balance",
+      subtitle: "Unpaid balance",
       icon: AlertTriangle,
-      color: stats.pendingDebts > 0 ? "bg-rose-500/10 text-rose-500 border-rose-500/20" : "bg-slate-500/10 text-slate-500 border-slate-500/20",
+      color: stats.pendingDebts > 0 ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : "bg-slate-500/10 text-slate-500 border-slate-500/20",
+      borderColor: stats.pendingDebts > 0 ? "border-t-amber-500" : "border-t-slate-400 dark:border-t-slate-700",
     },
     {
       title: t("dash_daily_revenue"),
       value: formatCurrency(stats.dailyRevenue),
       subtitle: "Collected today",
       icon: DollarSign,
-      color: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+      color: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+      borderColor: "border-t-violet-500",
     },
   ];
 
@@ -166,13 +206,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
             <div
               key={idx}
-              className={`p-6 bg-card border rounded-3xl transition-all duration-300 hover:scale-[1.02] shadow-sm flex flex-col justify-between`}
+              className={`p-6 bg-card border border-t-4 ${card.borderColor} rounded-3xl transition-all duration-300 hover:scale-[1.03] hover:shadow-lg shadow-sm flex flex-col justify-between`}
             >
               <div className="flex justify-between items-start">
                 <span className="text-sm font-semibold text-muted-foreground">{card.title}</span>
