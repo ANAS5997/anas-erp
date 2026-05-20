@@ -46,6 +46,8 @@ export function AppShell({ children }: AppShellProps) {
     notifications,
     markAllNotificationsRead,
     storeName,
+    themeColor,
+    setThemeColor,
   } = useStore();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -86,6 +88,15 @@ export function AppShell({ children }: AppShellProps) {
       router.push("/login");
     }
   }, [user, router]);
+
+  // Dynamically apply selected theme color class to HTML
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const html = document.documentElement;
+      html.classList.remove("theme-purple", "theme-emerald", "theme-blue", "theme-amber", "theme-rose");
+      html.classList.add(`theme-${themeColor}`);
+    }
+  }, [themeColor]);
 
   if (!user) {
     return (
@@ -193,6 +204,28 @@ export function AppShell({ children }: AppShellProps) {
               <Globe className="h-5 w-5" />
               <span className="text-xs font-semibold">{language === "en" ? "AR" : "EN"}</span>
             </button>
+
+            {/* Premium Theme Color Picker Pill */}
+            <div className="flex items-center space-x-1.5 space-x-reverse bg-muted/40 p-1.5 rounded-xl border border-border/80">
+              {[
+                { name: "purple", color: "bg-violet-500" },
+                { name: "emerald", color: "bg-emerald-500" },
+                { name: "blue", color: "bg-blue-500" },
+                { name: "amber", color: "bg-amber-500" },
+                { name: "rose", color: "bg-rose-500" },
+              ].map((c) => (
+                <button
+                  key={c.name}
+                  onClick={() => setThemeColor(c.name as any)}
+                  className={`h-3.5 w-3.5 rounded-full ${c.color} cursor-pointer transition-all duration-200 hover:scale-125 active:scale-95 ${
+                    themeColor === c.name 
+                      ? "ring-1.5 ring-primary ring-offset-2 ring-offset-background scale-110" 
+                      : "opacity-75 hover:opacity-100"
+                  }`}
+                  title={c.name}
+                />
+              ))}
+            </div>
 
             {/* Theme Toggle */}
             <button

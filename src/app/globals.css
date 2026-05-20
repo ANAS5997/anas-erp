@@ -202,3 +202,40 @@ input[type="number"]::-webkit-outer-spin-button {
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.45);
 }
+
+/* Custom theme color presets */
+.theme-emerald {
+  --primary: 142.1 76.2% 38%;
+  --ring: 142.1 76.2% 38%;
+}
+.dark .theme-emerald {
+  --primary: 142.1 70.6% 52%;
+  --ring: 142.1 70.6% 52%;
+}
+
+.theme-blue {
+  --primary: 217.2 91.2% 52%;
+  --ring: 217.2 91.2% 52%;
+}
+.dark .theme-blue {
+  --primary: 213.1 93.9% 60%;
+  --ring: 213.1 93.9% 60%;
+}
+
+.theme-amber {
+  --primary: 38 92% 50%;
+  --ring: 38 92% 50%;
+}
+.dark .theme-amber {
+  --primary: 38 92% 62%;
+  --ring: 38 92% 62%;
+}
+
+.theme-rose {
+  --primary: 346.8 77.2% 49.8%;
+  --ring: 346.8 77.2% 49.8%;
+}
+.dark .theme-rose {
+  --primary: 346.8 77.2% 59.8%;
+  --ring: 346.8 77.2% 59.8%;
+}

@@ -31,6 +31,7 @@ interface AppState {
   // Theme & Locale
   theme: "dark" | "light";
   language: "en" | "ar";
+  themeColor: "purple" | "emerald" | "blue" | "amber" | "rose";
   
   // Database State
   customers: Customer[];
@@ -58,6 +59,7 @@ interface AppState {
   setRole: (role: "admin" | "employee") => void;
   setTheme: (theme: "dark" | "light") => void;
   setLanguage: (lang: "en" | "ar") => void;
+  setThemeColor: (color: "purple" | "emerald" | "blue" | "amber" | "rose") => void;
   updateStoreDetails: (name: string, phone: string, address: string) => void;
   updateInvoiceSettings: (settings: {
     storeSlogan: string;
@@ -348,6 +350,7 @@ export const useStore = create<AppState>()(
       role: "admin",
       theme: "dark",
       language: "en",
+      themeColor: "purple",
       adminPassword: "anasali2006",
       employeeAccounts: [],
       
@@ -388,6 +391,7 @@ export const useStore = create<AppState>()(
       },
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),
+      setThemeColor: (themeColor) => set({ themeColor }),
       
       updateStoreDetails: (storeName, storePhone, storeAddress) => {
         set({ storeName, storePhone, storeAddress });
@@ -749,6 +753,7 @@ export const useStore = create<AppState>()(
       partialize: (state) => ({
         theme: state.theme,
         language: state.language,
+        themeColor: state.themeColor,
         storeName: state.storeName,
         storePhone: state.storePhone,
         storeAddress: state.storeAddress,
