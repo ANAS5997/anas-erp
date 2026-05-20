@@ -345,98 +345,98 @@ export function SystemGuide() {
 
   return (
     <>
-      {/* Floating Helper Button */}
+      {/* Floating Helper Button - Safely positioned above the bottom dock on mobile */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center cursor-pointer border border-primary/20"
+        className="fixed bottom-20 md:bottom-6 right-6 z-40 h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer border border-primary/20"
         title={isAr ? "دليل المساعد الذكي" : "Smart Assistant Guide"}
       >
-        <LifeBuoy className="h-6 w-6 animate-spin-slow text-white" />
-        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+        <LifeBuoy className="h-5.5 w-5.5 animate-spin-slow text-white" />
+        <span className="absolute -top-1 -right-1 flex h-4 w-4">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 text-[9px] text-white font-extrabold items-center justify-center">?</span>
+          <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 text-[8px] text-white font-extrabold items-center justify-center">?</span>
         </span>
       </button>
 
       {/* Helper Side Drawer Panel */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-xs animate-fade-in">
           {/* Backdrop Click Dismiss */}
           <div className="absolute inset-0" onClick={() => setIsOpen(false)} />
 
-          {/* Drawer Container */}
+          {/* Drawer Container - Small (290px), semi-transparent glass container */}
           <div
-            className={`w-full max-w-md bg-card border-l border-border h-full flex flex-col relative z-10 shadow-2xl animate-slide-in-right p-6 ${
+            className={`w-full max-w-[290px] bg-card/75 backdrop-blur-xl border-l border-border/80 h-full flex flex-col relative z-10 shadow-2xl animate-slide-in-right p-4 ${
               isRTL ? "text-right" : "text-left"
             }`}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <Sparkles className="h-5 w-5" />
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-1.5">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Sparkles className="h-4.5 w-4.5" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-foreground">
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-xs text-foreground truncate">
                     {isAr ? "المساعد الذكي لمتجر أبو أنس" : "Abo Anas ERP Guide"}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground font-semibold">
+                  <p className="text-[9px] text-muted-foreground font-semibold truncate">
                     {isAr ? "شرح تفاعلي للأقسام والميزات" : "Interactive feature guide & tips"}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-all"
+                className="p-1 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-all cursor-pointer"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4.5 w-4.5" />
               </button>
             </div>
 
             {/* Navigation Tabs inside Drawer */}
-            <div className="grid grid-cols-2 gap-2 mt-4 p-1 bg-muted/40 rounded-xl border border-border">
+            <div className="grid grid-cols-2 gap-1.5 mt-3 p-0.5 bg-muted/40 rounded-xl border border-border">
               <button
                 onClick={() => setActiveTab("current")}
-                className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                className={`py-1.5 text-[10px] font-bold rounded-lg transition-all ${
                   activeTab === "current" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                 }`}
               >
-                {isAr ? "شرح الصفحة الحالية" : "Current Screen"}
+                {isAr ? "شرح الصفحة" : "Current Screen"}
               </button>
               <button
                 onClick={() => setActiveTab("all")}
-                className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                className={`py-1.5 text-[10px] font-bold rounded-lg transition-all ${
                   activeTab === "all" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
                 }`}
               >
-                {isAr ? "تصفح جميع الأقسام" : "All Sections"}
+                {isAr ? "تصفح الأقسام" : "All Sections"}
               </button>
             </div>
 
             {/* Content Body */}
-            <div className="flex-1 overflow-y-auto py-4 space-y-6">
+            <div className="flex-1 overflow-y-auto py-3 space-y-5">
               {activeTab === "current" ? (
-                <div className="space-y-6 animate-fade-in">
+                <div className="space-y-5 animate-fade-in">
                   {/* Current Section Description */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1.5 text-primary">
-                      <BookOpen className="h-4.5 w-4.5" />
-                      <span className="font-extrabold text-sm uppercase tracking-wider">{currentGuide.title}</span>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1 text-primary">
+                      <BookOpen className="h-4 w-4" />
+                      <span className="font-extrabold text-xs uppercase tracking-wider">{currentGuide.title}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed bg-muted/20 p-3.5 border border-border rounded-2xl">
+                    <p className="text-[11px] text-muted-foreground leading-relaxed bg-muted/30 border border-border/50 p-3 rounded-xl">
                       {currentGuide.description}
                     </p>
                   </div>
 
                   {/* Benefits */}
-                  <div className="space-y-3">
-                    <span className="text-xs font-extrabold text-foreground uppercase tracking-wider block">
+                  <div className="space-y-2.5">
+                    <span className="text-[11px] font-extrabold text-foreground uppercase tracking-wider block">
                       {isAr ? "💡 ماذا تستفيد من هذا القسم؟" : "What is this used for?"}
                     </span>
-                    <ul className="space-y-2">
+                    <ul className="space-y-1.5">
                       {currentGuide.benefits.map((benefit, i) => (
-                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2 leading-relaxed">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5 leading-relaxed">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
                           <span>{benefit}</span>
                         </li>
                       ))}
@@ -444,15 +444,15 @@ export function SystemGuide() {
                   </div>
 
                   {/* Tips & Warnings */}
-                  <div className="space-y-3 pt-2">
-                    <span className="text-xs font-extrabold text-foreground uppercase tracking-wider block">
+                  <div className="space-y-2.5 pt-1">
+                    <span className="text-[11px] font-extrabold text-foreground uppercase tracking-wider block">
                       {isAr ? "⚡ نصائح وإرشادات هامة:" : "Important Tips & Advice:"}
                     </span>
-                    <ul className="space-y-2">
+                    <ul className="space-y-1.5">
                       {currentGuide.tips.map((tip, i) => (
-                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2 leading-relaxed">
-                          <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                          <span className="bg-amber-500/5 text-amber-800 dark:text-amber-300 border border-amber-500/10 px-2 py-1 rounded-xl w-full">
+                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5 leading-relaxed">
+                          <Info className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                          <span className="bg-amber-500/5 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200 border border-amber-500/15 p-2 rounded-xl w-full">
                             {tip}
                           </span>
                         </li>
@@ -461,30 +461,30 @@ export function SystemGuide() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3 animate-fade-in">
-                  <span className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider block mb-2">
+                <div className="space-y-2.5 animate-fade-in">
+                  <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider block mb-1">
                     {isAr ? "اختر أي قسم لقراءة الشرح الخاص به:" : "Select a section to learn more:"}
                   </span>
-                  <div className="divide-y divide-border border border-border rounded-2xl overflow-hidden bg-card">
+                  <div className="divide-y divide-border border border-border/80 rounded-xl overflow-hidden bg-card/45">
                     {allSections.map((sec) => {
                       const secGuide = getGuideContent(sec.path);
                       return (
-                        <details key={sec.path} className="group transition-colors hover:bg-muted/10">
-                          <summary className="p-4 flex items-center justify-between font-bold text-xs text-foreground cursor-pointer list-none focus:outline-none">
+                        <details key={sec.path} className="group transition-colors hover:bg-muted/5">
+                          <summary className="p-3 flex items-center justify-between font-bold text-[11px] text-foreground cursor-pointer list-none focus:outline-none">
                             <span>{sec.name}</span>
                             <span className="text-muted-foreground group-open:rotate-90 transition-transform">
-                              {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                              {isRTL ? <ChevronLeft className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                             </span>
                           </summary>
-                          <div className="px-4 pb-4 space-y-3 text-start border-t border-border/50 pt-3">
-                            <p className="text-xs text-muted-foreground leading-relaxed font-light">
+                          <div className="px-3 pb-3 space-y-2.5 text-start border-t border-border/40 pt-2 bg-muted/20">
+                            <p className="text-[11px] text-muted-foreground leading-relaxed font-light">
                               {secGuide.description}
                             </p>
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-extrabold text-foreground uppercase tracking-wider block">
+                            <div className="space-y-0.5">
+                              <span className="text-[9px] font-extrabold text-foreground uppercase tracking-wider block">
                                 {isAr ? "💡 نصيحة مفيدة:" : "Tip:"}
                               </span>
-                              <p className="text-xs text-amber-800 dark:text-amber-300 bg-amber-500/5 border border-amber-500/10 p-2 rounded-lg">
+                              <p className="text-[11px] text-amber-800 dark:text-amber-200 bg-amber-500/5 border border-amber-500/10 p-2 rounded-lg">
                                 {secGuide.tips[0]}
                               </p>
                             </div>
@@ -498,11 +498,11 @@ export function SystemGuide() {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-border pt-4 text-center">
-              <p className="text-[10px] text-muted-foreground">
+            <div className="border-t border-border/60 pt-3 text-center">
+              <p className="text-[9px] text-muted-foreground">
                 {isAr 
-                  ? "متجر أبو أنس - نظام الإدارة المتكاملة الذكي ٢٠٢٦" 
-                  : "Abo Anas Store - Smart ERP Management 2026"}
+                  ? "متجر أبو أنس - نظام الإدارة المتكاملة ٢٠٢٦" 
+                  : "Abo Anas Store - Smart ERP 2026"}
               </p>
             </div>
           </div>
