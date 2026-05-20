@@ -189,8 +189,9 @@ export default function LogsPage() {
               )}
             </tbody>
           </table>
+        </div>
 
-          {/* Mobile Cards View */}
+        {/* Mobile Cards View */}
           <div className="grid grid-cols-1 gap-3 md:hidden">
             {filteredLogs.length === 0 ? (
               <div className="px-4 py-8 text-center text-muted-foreground italic text-sm border border-dashed border-border rounded-2xl">
@@ -240,7 +241,6 @@ export default function LogsPage() {
               })
             )}
           </div>
-        </div>
       </div>
     </div>
   );

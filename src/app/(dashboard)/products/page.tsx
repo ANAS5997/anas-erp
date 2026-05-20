@@ -332,8 +332,9 @@ export default function ProductsPage() {
               )}
             </tbody>
           </table>
+        </div>
 
-          {/* Mobile Catalog Cards */}
+        {/* Mobile Catalog Cards */}
           <div className="grid grid-cols-1 gap-4 md:hidden">
             {filteredProducts.length === 0 ? (
               <p className="text-center text-muted-foreground italic py-8">
@@ -349,9 +350,9 @@ export default function ProductsPage() {
 
                 return (
                   <div key={prod.id} className="bg-card border border-border p-4 rounded-3xl space-y-4 shadow-sm relative">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-extrabold text-base text-foreground">{prod.name}</h4>
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-extrabold text-base text-foreground truncate">{prod.name}</h4>
                         {prod.description && (
                           <p className="text-xs text-muted-foreground mt-0.5">{prod.description}</p>
                         )}
@@ -442,7 +443,6 @@ export default function ProductsPage() {
               })
             )}
           </div>
-        </div>
       </div>
 
       {/* Add / Edit Product Sliding Modal Dialog */}
