@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useStore } from "@/store/useStore";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -15,6 +13,9 @@ import {
   ArrowRight,
   ArrowLeft,
   Calendar,
+  ShieldCheck,
+  PiggyBank,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -25,15 +26,39 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from "recharts";
 
 export default function DashboardPage() {
-  const { t, isRTL } = useTranslation();
-  const { orders, customers, products, notifications, expenses } = useStore();
+  const { t, isRTL, language } = useTranslation();
+  const { orders, customers, products, notifications, expenses, logActivity } = useStore();
 
-  // 1. Calculate Stats
+  // Local state for Cash Drawer reconciler
+  const [openingCashInput, setOpeningCashInput] = useState("1000");
+  const [actualCashInput, setActualCashInput] = useState("");
+  const [reconciliationLog, setReconciliationLog] = useState<{
+    timestamp: string;
+    expected: number;
+    actual: number;
+    diff: number;
+  } | null>(null);
+
+  // Sync opening cash from localStorage if present
+  useEffect(() => {
+    const saved = localStorage.getItem("abo_anas_opening_cash");
+    if (saved) {
+      setOpeningCashInput(saved);
+    }
+    const savedLog = localStorage.getItem("abo_anas_reconciliation_log");
+    if (savedLog) {
+      try {
+        setReconciliationLog(JSON.parse(savedLog));
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
+
+  // Calculate Stats
   const stats = useMemo(() => {
     // Total Sales count
     const totalSalesCount = orders.length;
@@ -68,11 +93,15 @@ export default function DashboardPage() {
       .filter((o) => new Date(o.createdAt).toDateString() === todayStr)
       .reduce((acc, o) => acc + o.paid, 0);
 
+    // Daily Expenses
+    const dailyExpenses = expenses
+      .filter((e) => new Date(e.createdAt).toDateString() === todayStr)
+      .reduce((acc, e) => acc + e.amount, 0);
+
     // Most Sold Products (accumulate quantities from order items)
     const productSalesMap: Record<string, { name: string; qty: number; revenue: number }> = {};
     orders.forEach((order) => {
       order.items.forEach((item) => {
-        // Find product name in current inventory, fallback to item name or ID
         const prod = products.find((p) => p.id === item.productId);
         const name = prod?.name || `Product (${item.productId})`;
         
@@ -105,11 +134,11 @@ export default function DashboardPage() {
       });
       const daysRevenue = orders
         .filter((o) => new Date(o.createdAt).toDateString() === dateStr)
-        .reduce((acc, o) => acc + o.total, 0); // show total sales value
+        .reduce((acc, o) => acc + o.total, 0);
 
       const daysCash = orders
         .filter((o) => new Date(o.createdAt).toDateString() === dateStr)
-        .reduce((acc, o) => acc + o.paid, 0); // show actual cash collected
+        .reduce((acc, o) => acc + o.paid, 0);
 
       return {
         date: formattedDate,
@@ -128,6 +157,7 @@ export default function DashboardPage() {
       grossProfit,
       netProfit,
       dailyRevenue,
+      dailyExpenses,
       topProducts,
       lowStockAlerts,
       chartData,
@@ -137,6 +167,44 @@ export default function DashboardPage() {
   const recentOrders = useMemo(() => {
     return orders.slice(0, 5);
   }, [orders]);
+
+  // Drawer calculations
+  const openingCash = parseFloat(openingCashInput) || 0;
+  const expectedCashInDrawer = openingCash + stats.dailyRevenue - stats.dailyExpenses;
+  const actualCashCounted = actualCashInput !== "" ? parseFloat(actualCashInput) || 0 : null;
+  const drawerDifference = actualCashCounted !== null ? actualCashCounted - expectedCashInDrawer : 0;
+
+  const handleSaveOpeningCash = (val: string) => {
+    setOpeningCashInput(val);
+    localStorage.setItem("abo_anas_opening_cash", val);
+  };
+
+  const handleReconcileDrawer = () => {
+    if (actualCashCounted === null) return;
+    
+    const newLog = {
+      timestamp: new Date().toLocaleString(),
+      expected: expectedCashInDrawer,
+      actual: actualCashCounted,
+      diff: drawerDifference,
+    };
+    
+    setReconciliationLog(newLog);
+    localStorage.setItem("abo_anas_reconciliation_log", JSON.stringify(newLog));
+    
+    const diffText = drawerDifference === 0 
+      ? "Drawer reconciled perfectly" 
+      : drawerDifference > 0 
+      ? `Drawer reconciled with surplus: +${drawerDifference}` 
+      : `Drawer reconciled with shortage: ${drawerDifference}`;
+      
+    logActivity(`[Vault Reconciliation] ${diffText}. Expected: ${expectedCashInDrawer}, Counted: ${actualCashCounted}`);
+    
+    alert(language === "ar" 
+      ? "تم مطابقة الخزينة وتسجيل الجرد بنجاح!" 
+      : "Cash drawer reconciliation logged successfully!"
+    );
+  };
 
   const statCards = [
     {
@@ -190,43 +258,169 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in pb-16 md:pb-8">
       {/* Welcome header with stats status */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight">Overview Dashboard</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Realtime shop intelligence, stock tracker, and debt logs.
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            {language === "ar" ? "متجر أبو أنس" : "Abo Anas Store"}
+          </h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            {language === "ar" 
+              ? "لوحة تحكم ذكية لمتابعة المبيعات، المخزون، والديون والوردية الحالية." 
+              : "Realtime shop intelligence, stock tracker, and drawer shift vault."}
           </p>
         </div>
-        <div className="flex items-center space-x-2 space-x-reverse bg-card border border-border px-4 py-2.5 rounded-2xl text-sm font-semibold">
+        <div className="flex items-center space-x-2 space-x-reverse bg-card border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-semibold w-fit">
           <Calendar className="h-4 w-4 text-primary" />
           <span>{formatDate(new Date())}</span>
         </div>
       </div>
 
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      {/* Metric Cards Grid - Responsive 2 Columns on mobile, 3 on tablet, 6 on desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
             <div
               key={idx}
-              className={`p-6 bg-card border border-t-4 ${card.borderColor} rounded-3xl transition-all duration-300 hover:scale-[1.03] hover:shadow-lg shadow-sm flex flex-col justify-between`}
+              className={`p-4 sm:p-6 bg-card border border-t-4 ${card.borderColor} rounded-3xl transition-all duration-300 hover:scale-[1.02] hover:shadow-md shadow-sm flex flex-col justify-between`}
             >
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-semibold text-muted-foreground">{card.title}</span>
-                <div className={`p-2.5 rounded-2xl border ${card.color}`}>
-                  <Icon className="h-5 w-5" />
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-[11px] sm:text-xs font-semibold text-muted-foreground leading-tight">{card.title}</span>
+                <div className={`p-1.5 sm:p-2 rounded-xl border ${card.color} shrink-0`}>
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <div className="mt-4">
-                <span className="text-3xl font-extrabold tracking-tight">{card.value}</span>
-                <p className="text-xs text-muted-foreground mt-1.5">{card.subtitle}</p>
+              <div className="mt-2 sm:mt-4">
+                <span className="text-lg sm:text-2xl font-extrabold tracking-tight block truncate">{card.value}</span>
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 block truncate">{card.subtitle}</p>
               </div>
             </div>
           );
         })}
+      </div>
+
+      {/* 🏦 Abo Anas Cash Drawer / Vault Reconciler */}
+      <div className="p-6 bg-card border border-border rounded-3xl space-y-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20">
+              <PiggyBank className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-lg text-foreground">
+                {language === "ar" ? "خزينة متجر أبو أنس للوردية الحالية" : "Abo Anas Store Cash Vault"}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {language === "ar"
+                  ? "جرد وتسوية النقدية ومطابقة الرصيد الفعلي مع رصيد النظام."
+                  : "Audit physical register cash, compute discrepancies and log verification."}
+              </p>
+            </div>
+          </div>
+          {reconciliationLog && (
+            <div className="text-[10px] sm:text-xs bg-muted/60 border border-border rounded-xl px-3 py-1.5 flex items-center gap-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              <span>
+                {language === "ar" ? `آخر جرد: ${reconciliationLog.timestamp}` : `Last Audit: ${reconciliationLog.timestamp}`}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+          {/* Opening Cash Input */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground block">
+              {language === "ar" ? "رصيد بداية الوردية (الافتتاحي)" : "Shift Opening Cash"}
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={openingCashInput}
+                onChange={(e) => handleSaveOpeningCash(e.target.value)}
+                className="w-full bg-muted/40 border border-border rounded-2xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          {/* Expected Cash in Drawer */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground block">
+              {language === "ar" ? "الرصيد النقدي المتوقع بالخزينة" : "Expected Drawer Cash"}
+            </label>
+            <div className="bg-muted/40 border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground">
+              {formatCurrency(expectedCashInDrawer)}
+              <span className="text-[9px] font-normal text-muted-foreground block mt-0.5">
+                {language === "ar"
+                  ? `(افتتاحي ${openingCash} + مبيعات ${stats.dailyRevenue} - مصروفات ${stats.dailyExpenses})`
+                  : `(open ${openingCash} + sales ${stats.dailyRevenue} - expenses ${stats.dailyExpenses})`}
+              </span>
+            </div>
+          </div>
+
+          {/* Actual Cash Counted */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground block">
+              {language === "ar" ? "الرصيد الفعلي بعد الجرد اليدوي *" : "Actual Cash Counted *"}
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                placeholder={language === "ar" ? "أدخل المبلغ الفعلي بالصندوق" : "Type physical cash amount"}
+                value={actualCashInput}
+                onChange={(e) => setActualCashInput(e.target.value)}
+                className="w-full bg-muted/40 border border-border rounded-2xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          {/* Discrepancy Difference */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground block">
+              {language === "ar" ? "الفارق (عجز / زيادة)" : "Discrepancy / Status"}
+            </label>
+            <div className={`border rounded-2xl py-3 px-4 text-xs font-bold flex items-center justify-between ${
+              actualCashCounted === null
+                ? "bg-muted/40 border-border text-muted-foreground"
+                : drawerDifference === 0
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                : drawerDifference > 0
+                ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-600 dark:text-cyan-400"
+                : "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400"
+            }`}>
+              <span>
+                {actualCashCounted === null 
+                  ? (language === "ar" ? "بانتظار الجرد اليدوي" : "Awaiting Manual Count")
+                  : formatCurrency(drawerDifference)}
+              </span>
+              {actualCashCounted !== null && (
+                <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-card">
+                  {drawerDifference === 0 
+                    ? (language === "ar" ? "مطابق" : "Matched")
+                    : drawerDifference > 0 
+                    ? (language === "ar" ? "زيادة" : "Surplus")
+                    : (language === "ar" ? "عجز" : "Shortage")}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {actualCashCounted !== null && (
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={handleReconcileDrawer}
+              className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-2xl shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all text-xs cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>
+                {language === "ar" ? "تسجيل مطابقة الخزينة وحفظ التقرير" : "Reconcile Drawer & Save"}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Revenue Charts & Low Stock Alerts */}

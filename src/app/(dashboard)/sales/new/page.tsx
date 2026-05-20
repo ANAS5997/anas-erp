@@ -339,7 +339,9 @@ export default function NewSalePage() {
               <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider block">
                 Selected checkout tray
               </span>
-              <div className="border border-border rounded-2xl overflow-x-auto bg-muted/10">
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block border border-border rounded-2xl overflow-x-auto bg-muted/10">
                 <table className="w-full text-xs text-left">
                   <thead>
                     <tr className="bg-muted/30 border-b border-border font-semibold text-muted-foreground">
@@ -398,6 +400,57 @@ export default function NewSalePage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile List View */}
+              <div className="md:hidden space-y-3">
+                {cart.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-muted-foreground italic border border-border rounded-2xl bg-muted/10">
+                    Basket is empty. Search products above to add them.
+                  </div>
+                ) : (
+                  cart.map((item) => (
+                    <div key={item.productId} className="p-4 bg-muted/10 border border-border rounded-2xl space-y-3 flex flex-col">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-bold text-sm text-foreground">{item.name}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{formatCurrency(item.price)} per unit</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.productId)}
+                          className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all shrink-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-border/40">
+                        <div className="inline-flex items-center gap-2 border border-border rounded-lg bg-card p-1">
+                          <button
+                            type="button"
+                            onClick={() => updateCartQty(item.productId, item.qty - 1)}
+                            className="p-1 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="font-bold w-4 text-center text-xs">{item.qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => updateCartQty(item.productId, item.qty + 1)}
+                            className="p-1 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-muted-foreground block">Subtotal</span>
+                          <span className="font-bold text-sm text-foreground">{formatCurrency(item.price * item.qty)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
